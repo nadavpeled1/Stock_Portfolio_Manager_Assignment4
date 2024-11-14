@@ -8,7 +8,13 @@ class StockService:
     def __init__(self):
         self.portfolio = {}
 
-    def add_stock(self, name: str, symbol: str, purchase_price: float, purchase_date: str, shares: int) -> Stock:
+    '''
+    If the ‘name’ or ‘purchase date’ is not supplied for a stock on the POST
+    request, the JSON representation for those fields is the string ‘NA’ (Not
+    Available). E.g., that is what the server returns for those fields in a GET
+    request.
+    '''
+    def add_stock(self, symbol: str, purchase_price: float, shares: int, name: str = 'NA', purchase_date: str = 'NA') -> Stock:
         stock_id = str(uuid.uuid4())
         new_stock = Stock(stock_id, name, symbol, purchase_price, purchase_date, shares)
         self.portfolio[stock_id] = new_stock
