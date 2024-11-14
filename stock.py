@@ -9,6 +9,16 @@ class Stock:
         self.purchase_date = purchase_date
         self.shares = shares
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'symbol': self.symbol,
+            'purchase_price': self.purchase_price,
+            'purchase_date': self.purchase_date,
+            'shares': self.shares
+        }
+
     def __repr__(self):
         return (f"Stock(id={self.id}, name={self.name}, symbol={self.symbol}, "
                 f"purchase_price={self.purchase_price}, purchase_date={self.purchase_date}, shares={self.shares})")

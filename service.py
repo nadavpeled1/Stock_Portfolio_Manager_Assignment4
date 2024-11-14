@@ -14,6 +14,7 @@ class StockService:
     request, the JSON representation for those fields is the string ‘NA’ (Not
     Available). E.g., that is what the server returns for those fields in a GET
     request.
+    The validity is checked in the controller layer.
     '''
     def add_stock(self, symbol: str, purchase_price: float, shares: int, name: str = 'NA', purchase_date: str = 'NA') -> Stock:
         stock_id = str(uuid.uuid4())
@@ -34,14 +35,14 @@ class StockService:
             raise ValueError("Stock not found")
 
     def get_stock_current_price(self, symbol: str) -> float:
-        #TODO: 2 numbers after the decimal point
-        #for more info: https://api-ninjas.com/api/stockprice
-        api_url = 'https://api.api-ninjas.com/v1/stockprice?ticker={}'.format(symbol)
-        response = requests.get(api_url, headers={'X-Api-Key': NINJA_API_KEY})
-        if response.status_code == requests.codes.ok:
-            return response.json()['price']
-        else:
-            print("Error:", response.status_code, response.text)
+            # for more info: https://api-ninjas.com/api/stockprice
+            api_url = 'https://api.api-ninjas.com/v1/stockprice?ticker={}'.format(symbol)
+            response = requests.get(api_url, headers={'X-Api-Key': NINJA_API_KEY})
+            if response.status_code == requests.codes.ok:
+                price = response.json()['price']
+                return round(price, 2)
+            else:
+                raise ValueError("Price not available")
 
     def get_stock_value(self, stock_id: str) -> float:
         if stock_id in self.portfolio:
@@ -50,6 +51,9 @@ class StockService:
             return stock.shares * current_price
         else:
             raise ValueError("Stock not found")
+
+    def get_stocks(self) -> list:
+        return [stock.to_dict() for stock in self.portfolio.values()]
 
     def get_portfolio_value(self) -> float:
         total_value = 0
