@@ -4,6 +4,7 @@
 from stock import Stock
 import uuid, requests
 NINJA_API_KEY = "" #TODO: Add your API key here
+#TODO: test the ninja api functionality
 class StockService:
     def __init__(self):
         self.portfolio = {}
@@ -33,6 +34,7 @@ class StockService:
             raise ValueError("Stock not found")
 
     def get_stock_current_price(self, symbol: str) -> float:
+        #TODO: 2 numbers after the decimal point
         #for more info: https://api-ninjas.com/api/stockprice
         api_url = 'https://api.api-ninjas.com/v1/stockprice?ticker={}'.format(symbol)
         response = requests.get(api_url, headers={'X-Api-Key': NINJA_API_KEY})
