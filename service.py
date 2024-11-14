@@ -31,7 +31,7 @@ class StockService:
         api_url = 'https://api.api-ninjas.com/v1/stockprice?ticker={}'.format(symbol)
         response = requests.get(api_url, headers={'X-Api-Key': NINJA_API_KEY})
         if response.status_code == requests.codes.ok:
-            print(response.text)
+            return response.json()['price']
         else:
             print("Error:", response.status_code, response.text)
 
