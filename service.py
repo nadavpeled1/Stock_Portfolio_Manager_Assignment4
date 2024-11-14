@@ -2,8 +2,8 @@
 # service.py
 
 from stock import Stock
-import uuid
-
+import uuid, requests
+NINJA_API_KEY = "" #TODO: Add your API key here
 class StockService:
     def __init__(self):
         self.portfolio = {}
@@ -26,18 +26,30 @@ class StockService:
         else:
             raise ValueError("Stock not found")
 
-    def get_stock_value(self, stock_id: str, current_price: float) -> float:
+    def get_stock_current_price(self, symbol: str) -> float:
+        #for more info: https://api-ninjas.com/api/stockprice
+        api_url = 'https://api.api-ninjas.com/v1/stockprice?ticker={}'.format(symbol)
+        response = requests.get(api_url, headers={'X-Api-Key': NINJA_API_KEY})
+        if response.status_code == requests.codes.ok:
+            print(response.text)
+        else:
+            print("Error:", response.status_code, response.text)
+
+    def get_stock_value(self, stock_id: str) -> float:
         if stock_id in self.portfolio:
             stock = self.portfolio[stock_id]
+            current_price = self.get_stock_current_price(stock.symbol)
             return stock.shares * current_price
         else:
             raise ValueError("Stock not found")
 
-    def get_portfolio_value(self, stock_prices: dict) -> float:
+    def get_portfolio_value(self) -> float:
         total_value = 0
         for stock in self.portfolio.values():
-            if stock.symbol in stock_prices:
-                total_value += stock.shares * stock_prices[stock.symbol]
+            current_price = self.get_stock_current_price(stock.symbol)
+            if current_price:
+                total_value += stock.shares * current_price
             else:
                 raise ValueError(f"Price for stock {stock.symbol} not available")
         return total_value
+
