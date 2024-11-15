@@ -2,13 +2,14 @@
 # service.py
 
 from stock import Stock
-import uuid, requests
+import requests
 NINJA_API_KEY = "" #TODO: Add your API key here
 #TODO: test the ninja api functionality
 class StockService:
     def __init__(self):
         # dict since we need to support CRUD operations for specific stocks by id
         self.portfolio = {}
+        self.nextid = 1
 
     '''
     If the ‘name’ or ‘purchase date’ is not supplied for a stock on the POST
@@ -18,7 +19,8 @@ class StockService:
     The validity is checked in the controller layer.
     '''
     def add_stock(self, symbol: str, purchase_price: float, shares: int, name: str = 'NA', purchase_date: str = 'NA') -> Stock:
-        stock_id = str(uuid.uuid4())
+        stock_id = str(self.nextid)
+        self.nextid += 1
         new_stock = Stock(stock_id, name, symbol, purchase_price, purchase_date, shares)
         self.portfolio[stock_id] = new_stock
         return new_stock
@@ -53,7 +55,8 @@ class StockService:
         else:
             raise ValueError("Stock not found")
 
-    # def get_stocks(self) -> dict:
+    # OLD VERSION
+    # def get_stocks(self) -> dict: OLD VERSION
     #     # return a list of stock objects as dictionaries
     #     # for easy serialization to JSON
     #     return {stock_id: stock.to_dict() for stock_id, stock in self.portfolio.items()}

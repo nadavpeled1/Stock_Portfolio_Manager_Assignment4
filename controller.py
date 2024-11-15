@@ -15,6 +15,7 @@ def validate_stock_data(data):
     #TODO: should we also check the type of the values? e.g. shares should be int. is it fine to send it as a string?
     #TODO: what is expected if a required fields is an empty string? now an empty string is considered as a valid value
     # required fields check
+    #TODO: a symbol in lower case is valid?
     if not all(
         required_param in data and data[required_param]
         for required_param in ('symbol', 'purchase_price', 'shares')
@@ -25,7 +26,6 @@ def validate_stock_data(data):
         return False
     if not isinstance(data['purchase_price'], (float, int)):
         return False
-    #TODO: shares required to be int or can be string of an int?
     if not isinstance(data['shares'], int):
         return False
     return True
@@ -37,6 +37,7 @@ def validate_stock_data(data):
  Possible error status codes returned: 400, 415, 500.
 '''
 @app.route('/stocks', methods=['POST'])
+#TESTED for 415, 400, 500, 201
 def add_stock():
     try:
         if not request.is_json:
@@ -63,6 +64,7 @@ Possible error status codes returned: 500. For this assignment, you need to
 support query strings of the form <field>=<value>.
 '''
 @app.route('/stocks', methods=['GET'])
+#TESTED for 200, 500
 def get_stocks():
     try:
         return jsonify(stock_service.get_stocks()), 200
@@ -70,6 +72,7 @@ def get_stocks():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/stocks/<string:stock_id>', methods=['GET'])
+#TESTED for 200, 404,
 def get_stock(stock_id):
     try:
         stock = stock_service.get_stock(stock_id)
