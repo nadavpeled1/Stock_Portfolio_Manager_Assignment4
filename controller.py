@@ -42,11 +42,11 @@ def validate_stock_data(data):
 def add_stock():
     try:
         if not request.is_json:
-            return jsonify({'error': 'Unsupported Media Type'}), 415
+            return jsonify({'error': 'Expected application/json media type'}), 415
         data = request.get_json()
 
         if not validate_stock_data(data):
-                    return jsonify({'error': 'Bad Request'}), 400
+                    return jsonify({'error': 'Malformed data'}), 400
 
         name = data.get('name', 'NA')
         purchase_date = data.get('purchase_date', 'NA')
@@ -57,7 +57,7 @@ def add_stock():
         stock = stock_service.add_stock(symbol, purchase_price, shares, name, purchase_date)
         return jsonify({'id': stock.id}), 201
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'server error': str(e)}), 500
 
 '''
 GET: If successful, it returns a JSON array of stock objects with status code 200.
@@ -70,7 +70,7 @@ def get_stocks():
     try:
         return jsonify(stock_service.get_stocks()), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'server error': str(e)}), 500
 
 @app.route('/stocks/<string:stock_id>', methods=['GET'])
 #TESTED for 200, 404,
@@ -79,9 +79,9 @@ def get_stock(stock_id):
         stock = stock_service.get_stock(stock_id)
         return jsonify(stock.__dict__), 200
     except ValueError as e:
-        return jsonify({'error': str(e)}), 404
+        return jsonify({'error': 'Not found'}), 404
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'server error': str(e)}), 500
 
 
 @app.route('/stock/<string:symbol>', methods=['DELETE'])

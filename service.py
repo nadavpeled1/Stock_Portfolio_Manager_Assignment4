@@ -45,15 +45,18 @@ class StockService:
                 price = response.json()['price']
                 return round(price, 2)
             else:
-                raise ValueError("Price not available")
+                raise ValueError("API response code " + str(response.status_code))
 
     def get_stock_value(self, stock_id: str) -> float:
         if stock_id in self.portfolio:
             stock = self.portfolio[stock_id]
-            current_price = self.fetch_stock_current_price(stock.symbol)
-            return stock.shares * current_price
+            try:
+                current_price = self.fetch_stock_current_price(stock.symbol)
+                return stock.shares * current_price
+            except ValueError as e:
+                raise ValueError("server error: " + str(e))
         else:
-            raise ValueError("Stock not found")
+            raise ValueError("Not found")
 
     # OLD VERSION
     # def get_stocks(self) -> dict: OLD VERSION
