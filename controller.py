@@ -13,6 +13,7 @@ stock_service = StockService()
 
 def validate_stock_data(data):
     #TODO: should we also check the type of the values? e.g. shares should be int. is it fine to send it as a string?
+    # now it is checked (most send as the correct type)
     #TODO: what is expected if a required fields is an empty string? now an empty string is considered as a valid value
     # required fields check
     #TODO: a symbol in lower case is valid?
