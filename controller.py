@@ -25,6 +25,7 @@ def validate_stock_data(data):
         return False
     if not isinstance(data['purchase_price'], (float, int)):
         return False
+    #TODO: shares required to be int or can be string of an int?
     if not isinstance(data['shares'], int):
         return False
     return True
@@ -64,7 +65,7 @@ support query strings of the form <field>=<value>.
 @app.route('/stocks', methods=['GET'])
 def get_stocks():
     try:
-        return jsonify(stock_service.portfolio), 200
+        return jsonify(stock_service.get_stocks()), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

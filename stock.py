@@ -19,6 +19,9 @@ class Stock:
             'shares': self.shares
         }
 
+    def __json__(self):
+        return self.to_dict()
+
     def __repr__(self):
         return (f"Stock(id={self.id}, name={self.name}, symbol={self.symbol}, "
                 f"purchase_price={self.purchase_price}, purchase_date={self.purchase_date}, shares={self.shares})")

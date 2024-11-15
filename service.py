@@ -53,10 +53,15 @@ class StockService:
         else:
             raise ValueError("Stock not found")
 
-    def get_stocks(self) -> dict:
+    # def get_stocks(self) -> dict:
+    #     # return a list of stock objects as dictionaries
+    #     # for easy serialization to JSON
+    #     return {stock_id: stock.to_dict() for stock_id, stock in self.portfolio.items()}
+
+    def get_stocks(self) -> list:
         # return a list of stock objects as dictionaries
-        # since we need to return a JSON array of stock objects, controller will call to_dict() on each stock object
-        return self.portfolio
+        # for easy serialization to JSON
+        return [stock.to_dict() for stock in self.portfolio.values()]
 
     def get_portfolio_value(self) -> float:
         total_value = 0
