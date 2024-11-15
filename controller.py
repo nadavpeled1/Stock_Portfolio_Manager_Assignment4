@@ -89,8 +89,17 @@ def remove_stock(symbol):
     pass
 
 @app.route('/stock-value/<string:symbol>', methods=['GET'])
+#TESTED for a valid stock in the portfolio. TODO: check what expected from a stock not in the portfolio
 def stock_value(symbol):
-    pass
+    # check valid symbol
+    #TODO: the ninja api accepts also lower case symbols. should we check for that?
+    if not symbol:
+        return jsonify({'error': 'Malformed data'}), 400
+
+    # get current value from service
+    value = stock_service.get_stock_value(symbol)
+    return jsonify({'value': value}), 200
+
 
 @app.route('/portfolio-value', methods=['GET'])
 def portfolio_value():

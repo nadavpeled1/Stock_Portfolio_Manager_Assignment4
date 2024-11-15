@@ -1,5 +1,6 @@
 # service.py
 # service.py
+import self
 
 from stock import Stock
 import requests
@@ -47,16 +48,18 @@ class StockService:
             else:
                 raise ValueError("API response code " + str(response.status_code))
 
-    def get_stock_value(self, stock_id: str) -> float:
-        if stock_id in self.portfolio:
-            stock = self.portfolio[stock_id]
-            try:
-                current_price = self.fetch_stock_current_price(stock.symbol)
-                return stock.shares * current_price
-            except ValueError as e:
-                raise ValueError("server error: " + str(e))
-        else:
-            raise ValueError("Not found")
+    def get_stock_value(self, symbol: str) -> float:
+        #TODO: what about stocks not in the portfolio? should we return 404? or consider 0 value?
+        if symbol not in [stock.symbol for stock in self.portfolio.values()]:
+            return 0
+        for stock in self.portfolio.values():
+            if stock.symbol == symbol:
+                try:
+                    current_price = self.fetch_stock_current_price(symbol)
+                    return stock.shares * current_price
+                except ValueError as e:
+                    raise ValueError("server error: " + str(e))
+        raise ValueError("Not found")
 
     # OLD VERSION
     # def get_stocks(self) -> dict: OLD VERSION
