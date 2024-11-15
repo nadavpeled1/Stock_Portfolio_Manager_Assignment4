@@ -7,6 +7,7 @@ NINJA_API_KEY = "" #TODO: Add your API key here
 #TODO: test the ninja api functionality
 class StockService:
     def __init__(self):
+        # dict since we need to support CRUD operations for specific stocks by id
         self.portfolio = {}
 
     '''
@@ -34,7 +35,7 @@ class StockService:
         else:
             raise ValueError("Stock not found")
 
-    def get_stock_current_price(self, symbol: str) -> float:
+    def fetch_stock_current_price(self, symbol: str) -> float:
             # for more info: https://api-ninjas.com/api/stockprice
             api_url = 'https://api.api-ninjas.com/v1/stockprice?ticker={}'.format(symbol)
             response = requests.get(api_url, headers={'X-Api-Key': NINJA_API_KEY})
@@ -47,18 +48,20 @@ class StockService:
     def get_stock_value(self, stock_id: str) -> float:
         if stock_id in self.portfolio:
             stock = self.portfolio[stock_id]
-            current_price = self.get_stock_current_price(stock.symbol)
+            current_price = self.fetch_stock_current_price(stock.symbol)
             return stock.shares * current_price
         else:
             raise ValueError("Stock not found")
 
-    def get_stocks(self) -> list:
-        return [stock.to_dict() for stock in self.portfolio.values()]
+    def get_stocks(self) -> dict:
+        # return a list of stock objects as dictionaries
+        # since we need to return a JSON array of stock objects, controller will call to_dict() on each stock object
+        return self.portfolio
 
     def get_portfolio_value(self) -> float:
         total_value = 0
         for stock in self.portfolio.values():
-            current_price = self.get_stock_current_price(stock.symbol)
+            current_price = self.fetch_stock_current_price(stock.symbol)
             if current_price:
                 total_value += stock.shares * current_price
             else:

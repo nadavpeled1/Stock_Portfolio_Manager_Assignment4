@@ -64,9 +64,17 @@ support query strings of the form <field>=<value>.
 @app.route('/stocks', methods=['GET'])
 def get_stocks():
     try:
-        query_params = request.args
-        stocks = stock_service.get_stocks(query_params)
-        return jsonify([stock.__dict__ for stock in stocks]), 200
+        return jsonify(stock_service.portfolio), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/stocks/<string:stock_id>', methods=['GET'])
+def get_stock(stock_id):
+    try:
+        stock = stock_service.get_stock(stock_id)
+        return jsonify(stock.__dict__), 200
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
