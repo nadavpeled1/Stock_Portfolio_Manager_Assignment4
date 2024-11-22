@@ -1,12 +1,11 @@
 import logging
 from datetime import datetime
-
 from flask import Flask, request, jsonify
 from service import StockService
 
 
 class StockController:
-    def __init__(self, app, stock_service):
+    def __init__(self):
         self.app = Flask(__name__)
         self.stock_service = StockService()
         self.setup_routes()
@@ -24,7 +23,6 @@ class StockController:
         self.app.route('/stock-value/<string:stock_id>', methods=['GET'])(self.stock_value)
 
         self.app.route('/portfolio-value', methods=['GET'])(self.portfolio_value)
-
 
     def validate_stock_data(self, data):
         required_fields = ['symbol', 'purchase_price', 'shares']
@@ -215,7 +213,6 @@ class StockController:
         except Exception as e:
             logging.error(f"Error in stock_value: {str(e)}")
             return jsonify({"server error": str(e)}), 500
-
 
     def portfolio_value(self):
         """

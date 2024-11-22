@@ -1,7 +1,7 @@
 import logging
-
 from stock import Stock
 import requests
+
 NINJA_API_KEY = "t7kGKURsW31xlUX9jhmX6Q==JKxHUYND1othy0fC"
 API_URL = 'https://api.api-ninjas.com/v1/stockprice?ticker={}'
 
@@ -11,7 +11,6 @@ class StockService:
         # dict since we need to support CRUD operations for specific stocks by id
         self.portfolio = {}
         self.nextid = 1
-
 
     def add_stock(self, symbol: str, purchase_price: float, shares: int, name: str = 'NA', purchase_date: str = 'NA') -> Stock:
         """
