@@ -1,7 +1,3 @@
-# service.py
-# service.py
-import self
-
 from stock import Stock
 import requests
 NINJA_API_KEY = "" #TODO: Add your API key here
