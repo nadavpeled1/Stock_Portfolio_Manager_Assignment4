@@ -19,7 +19,8 @@ class StockController:
         self.app.route('/stock/<string:stock_id>', methods=['DELETE'])(self.remove_stock)
         self.app.route('/stocks/<string:stock_id>', methods=['PUT'])(self.update_stock)
 
-        self.app.route('/stock-value/<string:symbol>', methods=['GET'])(self.stock_value)
+        self.app.route('/stock-value/<string:stock_id>', methods=['GET'])(self.stock_value)
+
         self.app.route('/portfolio-value', methods=['GET'])(self.portfolio_value)
 
 
@@ -31,35 +32,50 @@ class StockController:
                 logging.error(f"Validation failed: '{field}' is missing or empty.")
                 return False
 
-        # Validate 'symbol': must be a non-empty uppercase string
-        if not isinstance(data['symbol'], str) or not data['symbol'].isupper():
-            logging.error("Validation failed: 'symbol' must be an uppercase string.")
-            return False
-
         if self.stock_service.symbol_exists(data['symbol']):
             logging.error(f"Validation failed: Stock with symbol '{data['symbol']}' already exists.")
             return False
 
-        # Validate 'purchase_price': must be a positive float
+        if not self.validate_symbol(data['symbol']):
+            return False
+
+        if not self.validate_purchase_price(data['purchase_price']):
+            return False
+
+        if not self.validate_number_of_shares(data['shares']):
+            return False
+
+        logging.info("Stock data validation passed.")
+        return True
+
+    @staticmethod
+    def validate_purchase_price(purchase_price):
         try:
-            if float(data['purchase_price']) <= 0:
+            if float(purchase_price) <= 0:
                 logging.error("Validation failed: 'purchase_price' must be a positive number.")
                 return False
         except (ValueError, TypeError):
             logging.error("Validation failed: 'purchase_price' must be a valid number.")
             return False
+        return True
 
-        # Validate 'shares': must be a positive integer
+    @staticmethod
+    def validate_number_of_shares(number_of_shares):
         try:
-            if int(data['shares']) <= 0:
+            if int(number_of_shares) <= 0:
                 logging.error("Validation failed: 'shares' must be a positive integer.")
                 return False
         except (ValueError, TypeError):
             logging.error("Validation failed: 'shares' must be a valid integer.")
             return False
-
-        logging.info("Stock data validation passed.")
         return True
+
+    @staticmethod
+    def validate_symbol(symbol):
+        # Validate 'symbol': must be a non-empty uppercase string
+        if not isinstance(symbol, str) or not symbol.isupper():
+            logging.error("Validation failed: 'symbol' must be an uppercase string.")
+            return False
 
     # TODO: TEST for 415, 400, 500, 201
     def add_stock(self):
@@ -159,8 +175,9 @@ class StockController:
                     f"Validation failed: Stock ID in URL '{stock_id}' does not match ID in payload '{data['id']}'.")
                 return jsonify({"error": "ID mismatch"}), 400
 
-            # Validate the payload values
-            if not self.validate_stock_data(data):
+            is_valid_price = self.validate_purchase_price(data['purchase_price'])
+            is_valid_shares = self.validate_number_of_shares(data['shares'])
+            if not (is_valid_price and is_valid_shares):
                 return jsonify({"error": "Invalid data"}), 400
 
             # Update stock in the service layer
@@ -188,9 +205,12 @@ class StockController:
 
 
     # TODO: check what expected from a stock not in the portfolio
-    def stock_value(self, symbol):
-        # check valid symbol
+    def stock_value(self, stock_id):
         # TODO: the ninja api accepts also lower case symbols. should we check for that?
+        if self.stock_service.symbol_exists(data['symbol']):
+            logging.error(f"Validation failed: Stock with symbol '{data['symbol']}' already exists.")
+            return False
+
         if not symbol:
             return jsonify({'error': 'Malformed data'}), 400
 
