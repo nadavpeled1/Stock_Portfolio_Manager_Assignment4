@@ -26,7 +26,7 @@ class StockService:
         if stock_id in self.portfolio:
             return self.portfolio[stock_id]
         else:
-            raise ValueError("Stock not found")
+            raise KeyError(f"Stock with id '{stock_id}' not found in the portfolio.")
 
     def remove_stock(self, stock_id: str) -> None:
         if stock_id in self.portfolio:

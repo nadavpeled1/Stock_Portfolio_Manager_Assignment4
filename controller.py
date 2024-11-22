@@ -15,9 +15,7 @@ class StockController:
         # Define the routes and bind them to class methods
         self.app.route('/stocks', methods=['POST'])(self.add_stock)
         self.app.route('/stocks', methods=['GET'])(self.get_stocks)
-
         self.app.route('/stocks/<string:stock_id>', methods=['GET'])(self.get_stock)
-
         self.app.route('/stock/<string:stock_id>', methods=['DELETE'])(self.remove_stock)
 
         self.app.route('/stock-value/<string:symbol>', methods=['GET'])(self.stock_value)
@@ -62,7 +60,7 @@ class StockController:
         logging.info("Stock data validation passed.")
         return True
 
-    # TODO: TESTED for 415, 400, 500, 201
+    # TODO: TEST for 415, 400, 500, 201
     def add_stock(self):
         """
         POST: The POST request provides a JSON object payload that must contain: 'symbol', 'purchase price',
@@ -117,13 +115,14 @@ class StockController:
             logging.error(f"Error in get_stocks: {str(e)}")
             return jsonify({'server error': str(e)}), 500
 
-    # TODO: TESTED for 200, 404
+    # TODO: TEST for 200, 404, 500
     def get_stock(self, stock_id):
         try:
             stock = self.stock_service.get_stock(stock_id)
             return jsonify(stock.__dict__), 200
-        except ValueError as e:
-            return jsonify({'error': 'Not found'}), 404
+        except KeyError:
+            logging.error(f"DELETE request error: Stock with id '{stock_id}' not found.")
+            return jsonify({"error": "Not found"}), 404
         except Exception as e:
             return jsonify({'server error': str(e)}), 500
 
