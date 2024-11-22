@@ -106,10 +106,7 @@ class StockController:
         except Exception as e:
             return jsonify({'server error': str(e)}), 500
 
-
-        # TODO: TESTED for 200, 500
-
-
+    # TODO: TESTED for 200, 500
     def get_stocks(self):
         """
         GET: If successful, it returns a JSON array of stock objects with status code 200.
@@ -135,14 +132,13 @@ class StockController:
     # TODO: TEST for 200, 404, 500
     def get_stock(self, stock_id):
         try:
-            stock = self.stock_service.get_stock(stock_id)
+            stock = self.stock_service.get_stock_by_id(stock_id)
             return jsonify(stock.__dict__), 200
         except KeyError:
             logging.error(f"DELETE request error: Stock with id '{stock_id}' not found.")
             return jsonify({"error": "Not found"}), 404
         except Exception as e:
             return jsonify({'server error': str(e)}), 500
-
 
     def remove_stock(self, stock_id):
         try:
@@ -203,20 +199,23 @@ class StockController:
             logging.error(f"Exception in update_stock: {str(e)}")
             return jsonify({"server error": str(e)}), 500
 
-
     # TODO: check what expected from a stock not in the portfolio
     def stock_value(self, stock_id):
+        """
+        GET: Returns the current value of a stock with the given ID.
+        """
         # TODO: the ninja api accepts also lower case symbols. should we check for that?
-        if self.stock_service.symbol_exists(data['symbol']):
-            logging.error(f"Validation failed: Stock with symbol '{data['symbol']}' already exists.")
-            return False
+        try:
+            stock_value_data = self.stock_service.get_stock_value(stock_id)
 
-        if not symbol:
-            return jsonify({'error': 'Malformed data'}), 400
+            return jsonify(stock_value_data), 200
 
-        # get current value from service
-        value = self.stock_service.get_stock_value(symbol)
-        return jsonify({'value': value}), 200
+        except KeyError:
+            logging.error(f"Stock with ID '{stock_id}' not found.")
+            return jsonify({"error": "Not found"}), 404
+        except Exception as e:
+            logging.error(f"Error in stock_value: {str(e)}")
+            return jsonify({"server error": str(e)}), 500
 
 
     def portfolio_value(self):

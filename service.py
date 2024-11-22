@@ -1,3 +1,5 @@
+import logging
+
 from stock import Stock
 import requests
 NINJA_API_KEY = "" #TODO: Add your API key here
@@ -24,7 +26,7 @@ class StockService:
         self.portfolio[stock_id] = new_stock
         return new_stock
 
-    def get_stock(self, stock_id: str) -> Stock:
+    def get_stock_by_id(self, stock_id: str) -> Stock:
         if stock_id in self.portfolio:
             return self.portfolio[stock_id]
         else:
@@ -52,6 +54,30 @@ class StockService:
         stock.purchase_date = updated_data.get('purchase_date', stock.purchase_date)
         stock.shares = updated_data.get('shares', stock.shares)
 
+    def get_stock_value(self, stock_id: str) -> dict:
+        try:
+            stock = self.get_stock_by_id(stock_id)
+        except KeyError:
+            logging.warning(f"Stock with ID '{stock_id}' not found. Returning default value of 0.")
+            return {
+                "symbol": "N/A",
+                "ticker": 0.0,
+                "stock value": 0.0
+            }
+
+        try:
+            current_price = self.fetch_stock_current_price(stock.symbol)
+            stock_value = stock.shares * current_price
+
+            # Return the required data as a dictionary
+            return {
+                "symbol": stock.symbol,
+                "ticker": current_price,
+                "stock value": stock_value
+            }
+        except Exception as e:
+            raise ValueError(f"Error fetching stock value for '{stock.symbol}': {str(e)}")
+
     def fetch_stock_current_price(self, symbol: str) -> float:
             # for more info: https://api-ninjas.com/api/stockprice
             api_url = 'https://api.api-ninjas.com/v1/stockprice?ticker={}'.format(symbol)
@@ -61,19 +87,6 @@ class StockService:
                 return round(price, 2)
             else:
                 raise ValueError("API response code " + str(response.status_code))
-
-    def get_stock_value(self, symbol: str) -> float:
-        #TODO: what about stocks not in the portfolio? should we return 404? or consider 0 value?
-        if symbol not in [stock.symbol for stock in self.portfolio.values()]:
-            return 0
-        for stock in self.portfolio.values():
-            if stock.symbol == symbol:
-                try:
-                    current_price = self.fetch_stock_current_price(symbol)
-                    return stock.shares * current_price
-                except ValueError as e:
-                    raise ValueError("server error: " + str(e))
-        raise ValueError("Not found")
 
     # OLD VERSION
     # def get_stocks(self) -> dict: OLD VERSION
@@ -104,3 +117,5 @@ class StockService:
     def symbol_exists(self, symbol: str) -> bool:
         return any(stock.symbol == symbol for stock in self.portfolio.values())
 
+    def stock_id_exists(self, stock_id: str) -> bool:
+        return stock_id in self.portfolio
