@@ -15,8 +15,11 @@ class StockController:
         # Define the routes and bind them to class methods
         self.app.route('/stocks', methods=['POST'])(self.add_stock)
         self.app.route('/stocks', methods=['GET'])(self.get_stocks)
+
         self.app.route('/stocks/<string:stock_id>', methods=['GET'])(self.get_stock)
-        self.app.route('/stock/<string:symbol>', methods=['DELETE'])(self.remove_stock)
+
+        self.app.route('/stock/<string:stock_id>', methods=['DELETE'])(self.remove_stock)
+
         self.app.route('/stock-value/<string:symbol>', methods=['GET'])(self.stock_value)
         self.app.route('/portfolio-value', methods=['GET'])(self.portfolio_value)
 
@@ -125,8 +128,16 @@ class StockController:
             return jsonify({'server error': str(e)}), 500
 
 
-    def remove_stock(self, symbol):
-        pass
+    def remove_stock(self, stock_id):
+        try:
+            self.stock_service.remove_stock(stock_id)
+            return '', 204
+        except KeyError:
+            logging.error(f"DELETE request error: Stock with id '{stock_id}' not found.")
+            return jsonify({"error": "Not found"}), 404
+        except Exception as e:
+            logging.error(f"Error in remove_stock: {str(e)}")
+            return jsonify({'server error': str(e)}), 500
 
     # TODO: check what expected from a stock not in the portfolio
     def stock_value(self, symbol):

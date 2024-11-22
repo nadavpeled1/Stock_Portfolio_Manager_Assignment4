@@ -32,7 +32,7 @@ class StockService:
         if stock_id in self.portfolio:
             del self.portfolio[stock_id]
         else:
-            raise ValueError("Stock not found")
+            raise KeyError(f"Stock with id '{stock_id}' not found in the portfolio.")
 
     def fetch_stock_current_price(self, symbol: str) -> float:
             # for more info: https://api-ninjas.com/api/stockprice
