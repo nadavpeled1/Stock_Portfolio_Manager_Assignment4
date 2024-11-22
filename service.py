@@ -2,8 +2,8 @@ import logging
 
 from stock import Stock
 import requests
-NINJA_API_KEY = "" #TODO: Add your API key here
-#TODO: test the ninja api functionality
+NINJA_API_KEY = "t7kGKURsW31xlUX9jhmX6Q==JKxHUYND1othy0fC"
+API_URL = 'https://api.api-ninjas.com/v1/stockprice?ticker={}'
 
 
 class StockService:
@@ -78,21 +78,30 @@ class StockService:
         except Exception as e:
             raise ValueError(f"Error fetching stock value for '{stock.symbol}': {str(e)}")
 
-    def fetch_stock_current_price(self, symbol: str) -> float:
-            # for more info: https://api-ninjas.com/api/stockprice
-            api_url = 'https://api.api-ninjas.com/v1/stockprice?ticker={}'.format(symbol)
-            response = requests.get(api_url, headers={'X-Api-Key': NINJA_API_KEY})
-            if response.status_code == requests.codes.ok:
-                price = response.json()['price']
-                return round(price, 2)
-            else:
-                raise ValueError("API response code " + str(response.status_code))
+    @staticmethod
+    def fetch_stock_current_price(symbol: str) -> float:
+        """
+        For more info: https://api-ninjas.com/api/stockprice
+        """
+        try:
+            # Ensure the symbol is valid and properly formatted
+            symbol = symbol.strip().upper()
 
-    # OLD VERSION
-    # def get_stocks(self) -> dict: OLD VERSION
-    #     # return a list of stock objects as dictionaries
-    #     # for easy serialization to JSON
-    #     return {stock_id: stock.to_dict() for stock_id, stock in self.portfolio.items()}
+            # Make the API request with a timeout
+            response = requests.get(
+                API_URL.format(symbol), headers={'X-Api-Key': NINJA_API_KEY},
+                timeout=10)
+
+            if response.status_code == requests.codes.ok:
+                data = response.json()
+                if 'price' not in data:
+                    raise ValueError(f"API response missing 'price' field: {data}")
+                return round(data['price'], 2)
+            else:
+                raise ValueError(f"API request failed with status code {response.status_code}: {response.text}")
+
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"Error while making API request: {str(e)}")
 
     def get_stocks(self) -> list[dict[str, any]]:
         """
