@@ -1,4 +1,6 @@
 import logging
+from datetime import datetime
+
 from flask import Flask, request, jsonify
 from service import StockService
 
@@ -199,15 +201,12 @@ class StockController:
             logging.error(f"Exception in update_stock: {str(e)}")
             return jsonify({"server error": str(e)}), 500
 
-    # TODO: check what expected from a stock not in the portfolio
     def stock_value(self, stock_id):
         """
         GET: Returns the current value of a stock with the given ID.
         """
-        # TODO: the ninja api accepts also lower case symbols. should we check for that?
         try:
             stock_value_data = self.stock_service.get_stock_value(stock_id)
-
             return jsonify(stock_value_data), 200
 
         except KeyError:
@@ -219,4 +218,18 @@ class StockController:
 
 
     def portfolio_value(self):
-        pass
+        """
+        GET: Returns the total value of the portfolio along with the current date."""
+        try:
+            total_value = self.stock_service.get_portfolio_value()
+            current_date = datetime.now().isoformat()
+
+            response = {
+                "date": current_date,
+                "portfolio value": total_value
+            }
+            return jsonify(response), 200
+
+        except Exception as e:
+            logging.error(f"Error calculating portfolio value: {str(e)}")
+            return jsonify({"server error": str(e)}), 500

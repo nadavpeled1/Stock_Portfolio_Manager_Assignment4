@@ -114,14 +114,17 @@ class StockService:
         return [stock.to_dict() for stock in self.portfolio.values()]
 
     def get_portfolio_value(self) -> float:
-        total_value = 0
-        for stock in self.portfolio.values():
-            current_price = self.fetch_stock_current_price(stock.symbol)
-            if current_price:
-                total_value += stock.shares * current_price
-            else:
-                raise ValueError(f"Price for stock {stock.symbol} not available")
-        return total_value
+        total_value = 0.0
+        try:
+            for stock in self.portfolio.values():
+                current_price = self.fetch_stock_current_price(stock.symbol)
+                if current_price:
+                    total_value += stock.shares * current_price
+                else:
+                    raise ValueError(f"Price for stock {stock.symbol} not available")
+            return total_value
+        except Exception as e:
+            raise ValueError(f"Error calculating portfolio value: {str(e)}")
 
     def symbol_exists(self, symbol: str) -> bool:
         return any(stock.symbol == symbol for stock in self.portfolio.values())
