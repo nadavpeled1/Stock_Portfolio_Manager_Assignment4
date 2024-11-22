@@ -63,9 +63,14 @@ class StockService:
     #     # for easy serialization to JSON
     #     return {stock_id: stock.to_dict() for stock_id, stock in self.portfolio.items()}
 
-    def get_stocks(self) -> list:
-        # return a list of stock objects as dictionaries
-        # for easy serialization to JSON
+    def get_stocks(self) -> list[dict[str, any]]:
+        """
+        Returns:
+            A list of stock objects represented as dictionaries.
+        """
+        if not self.portfolio or not isinstance(self.portfolio, dict):
+            raise ValueError("Portfolio is empty or invalid.")
+
         return [stock.to_dict() for stock in self.portfolio.values()]
 
     def get_portfolio_value(self) -> float:

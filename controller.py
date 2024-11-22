@@ -53,10 +53,10 @@ def validate_stock_data(data):
 @app.route('/stocks', methods=['POST'])
 def add_stock():
     """
-     POST: The POST request provides a JSON object payload that must contain: 'symbol', 'purchase price', 'shares' fields.
-     Optionally it can also provide the ‘name’ and 'purchase date' of the stock.
-     If successful, it returns the JSON for the id * assigned to that object with status code 201.
-     Possible error status codes returned: 400, 415, 500.
+    POST: The POST request provides a JSON object payload that must contain: 'symbol', 'purchase price',
+    'shares' fields. Optionally it can also provide the ‘name’ and 'purchase date' of the stock. If successful,
+    it returns the JSON for the id * assigned to that object with status code 201. Possible error status codes
+    returned: 400, 415, 500.
     """
     try:
         content_type = request.headers.get('Content-Type')
@@ -80,17 +80,28 @@ def add_stock():
         return jsonify({'server error': str(e)}), 500
 
 
-'''
-GET: If successful, it returns a JSON array of stock objects with status code 200.
-Possible error status codes returned: 500. For this assignment, you need to
-support query strings of the form <field>=<value>.
-'''
+# TODO: TESTED for 200, 500
 @app.route('/stocks', methods=['GET'])
-#TESTED for 200, 500
 def get_stocks():
+    """
+    GET: If successful, it returns a JSON array of stock objects with status code 200.
+    Possible error status codes returned: 500.
+    For this assignment, you need to support query strings of the form <field>=<value>.
+    """
     try:
-        return jsonify(stock_service.get_stocks()), 200
+        stocks = stock_service.get_stocks()
+        query_params = request.args.to_dict()
+
+        # Apply filters if query parameters exist
+        if query_params:
+            stocks = [
+                stock for stock in stocks
+                if all(str(stock.get(key, "")).lower() == str(value).lower()
+                       for key, value in query_params.items() if key in stock)
+            ]
+
     except Exception as e:
+        logging.error(f"Error in get_stocks: {str(e)}")
         return jsonify({'server error': str(e)}), 500
 
 
