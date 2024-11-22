@@ -1,4 +1,5 @@
 # controller.py
+import logging
 
 from flask import Flask, request, jsonify
 from service import StockService
@@ -10,54 +11,74 @@ from service import StockService
 # Create a Flask app and a StockService object
 app = Flask(__name__)
 stock_service = StockService()
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 def validate_stock_data(data):
-    #TODO: should we also check the type of the values? e.g. shares should be int. is it fine to send it as a string?
-    # now it is checked (most send as the correct type)
-    #TODO: what is expected if a required fields is an empty string? now an empty string is considered as a valid value
-    # required fields check
-    #TODO: a symbol in lower case is valid?
-    if not all(
-        required_param in data and data[required_param]
-        for required_param in ('symbol', 'purchase_price', 'shares')
-    ):
+    required_fields = ['symbol', 'purchase_price', 'shares']
+    for field in required_fields:
+        # Check if the field exists and is not empty
+        if field not in data or not str(data[field]).strip():
+            logging.error(f"Validation failed: '{field}' is missing or empty.")
+            return False
+
+    # Validate 'symbol': must be a non-empty uppercase string
+    if not isinstance(data['symbol'], str) or not data['symbol'].isupper():
+        logging.error("Validation failed: 'symbol' must be an uppercase string.")
         return False
-    # type checking
-    if not isinstance(data['symbol'], str):
+
+    # Validate 'purchase_price': must be a positive float
+    try:
+        if float(data['purchase_price']) <= 0:
+            logging.error("Validation failed: 'purchase_price' must be a positive number.")
+            return False
+    except (ValueError, TypeError):
+        logging.error("Validation failed: 'purchase_price' must be a valid number.")
         return False
-    if not isinstance(data['purchase_price'], (float, int)):
+
+    # Validate 'shares': must be a positive integer
+    try:
+        if int(data['shares']) <= 0:
+            logging.error("Validation failed: 'shares' must be a positive integer.")
+            return False
+    except (ValueError, TypeError):
+        logging.error("Validation failed: 'shares' must be a valid integer.")
         return False
-    if not isinstance(data['shares'], int):
-        return False
+
+    logging.info("Stock data validation passed.")
     return True
 
-'''
- POST: The POST request provides a JSON object payload that must contain: 'symbol', 'purchase price', 'shares' fields.
- Optionally it can also provide the ‘name’ and 'purchase date' of the stock.
- If successful, it returns the JSON for the id * assigned to that object with status code 201.
- Possible error status codes returned: 400, 415, 500.
-'''
+
+# TODO: TESTED for 415, 400, 500, 201
 @app.route('/stocks', methods=['POST'])
-#TESTED for 415, 400, 500, 201
 def add_stock():
+    """
+     POST: The POST request provides a JSON object payload that must contain: 'symbol', 'purchase price', 'shares' fields.
+     Optionally it can also provide the ‘name’ and 'purchase date' of the stock.
+     If successful, it returns the JSON for the id * assigned to that object with status code 201.
+     Possible error status codes returned: 400, 415, 500.
+    """
     try:
-        if not request.is_json:
+        content_type = request.headers.get('Content-Type')
+        if content_type != 'application/json':
             return jsonify({'error': 'Expected application/json media type'}), 415
         data = request.get_json()
 
         if not validate_stock_data(data):
-                    return jsonify({'error': 'Malformed data'}), 400
+            return jsonify({'error': 'Malformed data'}), 400
 
         name = data.get('name', 'NA')
-        purchase_date = data.get('purchase_date', 'NA')
         symbol = data['symbol']
         purchase_price = data['purchase_price']
+        purchase_date = data.get('purchase_date', 'NA')
         shares = data['shares']
+
         # note: id is generated in the service layer
         stock = stock_service.add_stock(symbol, purchase_price, shares, name, purchase_date)
         return jsonify({'id': stock.id}), 201
     except Exception as e:
         return jsonify({'server error': str(e)}), 500
+
 
 '''
 GET: If successful, it returns a JSON array of stock objects with status code 200.
@@ -71,6 +92,7 @@ def get_stocks():
         return jsonify(stock_service.get_stocks()), 200
     except Exception as e:
         return jsonify({'server error': str(e)}), 500
+
 
 @app.route('/stocks/<string:stock_id>', methods=['GET'])
 #TESTED for 200, 404,
@@ -104,6 +126,7 @@ def stock_value(symbol):
 @app.route('/portfolio-value', methods=['GET'])
 def portfolio_value():
     pass
+
 
 if __name__ == '__main__':
     app.run(debug=True)
