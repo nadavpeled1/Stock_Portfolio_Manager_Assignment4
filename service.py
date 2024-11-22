@@ -83,3 +83,6 @@ class StockService:
                 raise ValueError(f"Price for stock {stock.symbol} not available")
         return total_value
 
+    def symbol_exists(self, symbol: str) -> bool:
+        return any(stock.symbol == symbol for stock in self.portfolio.values())
+

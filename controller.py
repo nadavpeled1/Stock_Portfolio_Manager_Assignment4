@@ -8,6 +8,8 @@ from service import StockService
 # /stock-value/{id} is the current value of the given stock in the portfolio (= current stock price times number of shares).
 # /portfolio-value is the current value of the entire portfolio.
 
+# TODO: should it be a controller instance ?
+
 # Create a Flask app and a StockService object
 app = Flask(__name__)
 stock_service = StockService()
@@ -25,6 +27,10 @@ def validate_stock_data(data):
     # Validate 'symbol': must be a non-empty uppercase string
     if not isinstance(data['symbol'], str) or not data['symbol'].isupper():
         logging.error("Validation failed: 'symbol' must be an uppercase string.")
+        return False
+
+    if stock_service.symbol_exists(data['symbol']):
+        logging.error(f"Validation failed: Stock with symbol '{data['symbol']}' already exists.")
         return False
 
     # Validate 'purchase_price': must be a positive float
