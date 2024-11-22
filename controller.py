@@ -19,9 +19,7 @@ class StockController:
         self.app.route('/stocks/<string:stock_id>', methods=['GET'])(self.get_stock)
         self.app.route('/stock/<string:stock_id>', methods=['DELETE'])(self.remove_stock)
         self.app.route('/stocks/<string:stock_id>', methods=['PUT'])(self.update_stock)
-
         self.app.route('/stock-value/<string:stock_id>', methods=['GET'])(self.stock_value)
-
         self.app.route('/portfolio-value', methods=['GET'])(self.portfolio_value)
 
     def validate_stock_data(self, data):
