@@ -17,6 +17,7 @@ class StockController:
         self.app.route('/stocks', methods=['GET'])(self.get_stocks)
         self.app.route('/stocks/<string:stock_id>', methods=['GET'])(self.get_stock)
         self.app.route('/stock/<string:stock_id>', methods=['DELETE'])(self.remove_stock)
+        self.app.route('/stocks/<string:stock_id>', methods=['PUT'])(self.update_stock)
 
         self.app.route('/stock-value/<string:symbol>', methods=['GET'])(self.stock_value)
         self.app.route('/portfolio-value', methods=['GET'])(self.portfolio_value)
@@ -137,6 +138,54 @@ class StockController:
         except Exception as e:
             logging.error(f"Error in remove_stock: {str(e)}")
             return jsonify({'server error': str(e)}), 500
+
+    def update_stock(self, stock_id):
+        try:
+            content_type = request.headers.get('Content-Type')
+            if content_type != 'application/json':
+                return jsonify({"error": "Expected application/json media type"}), 415
+
+            data = request.get_json()
+
+            # Required fields for the stock object
+            required_fields = ['id', 'symbol', 'name', 'purchase_price', 'purchase_date', 'shares']
+            if not all(field in data for field in required_fields):
+                logging.error(f"Validation failed: Missing required fields in data.")
+                return jsonify({"error": "Malformed data"}), 400
+
+            # Ensure the ID in the payload matches the stock_id in the URL
+            if data['id'] != stock_id:
+                logging.error(
+                    f"Validation failed: Stock ID in URL '{stock_id}' does not match ID in payload '{data['id']}'.")
+                return jsonify({"error": "ID mismatch"}), 400
+
+            # Validate the payload values
+            if not self.validate_stock_data(data):
+                return jsonify({"error": "Invalid data"}), 400
+
+            # Update stock in the service layer
+            self.stock_service.update_stock(
+                stock_id,
+                {
+                    'symbol': data['symbol'],
+                    'name': data['name'],
+                    'purchase_price': float(data['purchase_price']),
+                    'purchase_date': data['purchase_date'],
+                    'shares': int(data['shares'])
+                }
+            )
+
+            # Prepare and return the response
+            response_data = {"id": stock_id}
+            return jsonify(response_data), 200
+
+        except KeyError:
+            logging.error(f"PUT error: Stock with ID '{stock_id}' not found.")
+            return jsonify({"error": "Not found"}), 404
+        except Exception as e:
+            logging.error(f"Exception in update_stock: {str(e)}")
+            return jsonify({"server error": str(e)}), 500
+
 
     # TODO: check what expected from a stock not in the portfolio
     def stock_value(self, symbol):

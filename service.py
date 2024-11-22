@@ -2,20 +2,22 @@ from stock import Stock
 import requests
 NINJA_API_KEY = "" #TODO: Add your API key here
 #TODO: test the ninja api functionality
+
+
 class StockService:
     def __init__(self):
         # dict since we need to support CRUD operations for specific stocks by id
         self.portfolio = {}
         self.nextid = 1
 
-    '''
-    If the ‘name’ or ‘purchase date’ is not supplied for a stock on the POST
-    request, the JSON representation for those fields is the string ‘NA’ (Not
-    Available). E.g., that is what the server returns for those fields in a GET
-    request.
-    The validity is checked in the controller layer.
-    '''
+
     def add_stock(self, symbol: str, purchase_price: float, shares: int, name: str = 'NA', purchase_date: str = 'NA') -> Stock:
+        """
+        If the ‘name’ or ‘purchase date’ is not supplied for a stock on the POST
+        request, the JSON representation for those fields is the string ‘NA’ (Not
+        Available). E.g., that is what the server returns for those fields in a GET request.
+        The validity is checked in the controller layer.
+        """
         stock_id = str(self.nextid)
         self.nextid += 1
         new_stock = Stock(stock_id, name, symbol, purchase_price, purchase_date, shares)
@@ -33,6 +35,22 @@ class StockService:
             del self.portfolio[stock_id]
         else:
             raise KeyError(f"Stock with id '{stock_id}' not found in the portfolio.")
+
+    def update_stock(self, stock_id: str, updated_data: dict) -> None:
+        """
+        Updates the stock with the given stock_id using the provided updated_data.
+        """
+        if stock_id not in self.portfolio:
+            raise KeyError(f"Stock with ID '{stock_id}' not found.")
+
+        stock = self.portfolio[stock_id]
+
+        # Update stock fields with new values or retain existing ones
+        stock.symbol = updated_data.get('symbol', stock.symbol)
+        stock.name = updated_data.get('name', stock.name)
+        stock.purchase_price = updated_data.get('purchase_price', stock.purchase_price)
+        stock.purchase_date = updated_data.get('purchase_date', stock.purchase_date)
+        stock.shares = updated_data.get('shares', stock.shares)
 
     def fetch_stock_current_price(self, symbol: str) -> float:
             # for more info: https://api-ninjas.com/api/stockprice
