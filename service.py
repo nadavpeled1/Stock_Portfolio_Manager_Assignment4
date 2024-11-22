@@ -12,7 +12,8 @@ class StockService:
         self.portfolio = {}
         self.nextid = 1
 
-    def add_stock(self, symbol: str, purchase_price: float, shares: int, name: str = 'NA', purchase_date: str = 'NA') -> Stock:
+    def add_stock(self, symbol: str, purchase_price: float, shares: int,
+                  name: str = 'NA', purchase_date: str = 'NA') -> Stock:
         """
         If the ‘name’ or ‘purchase date’ is not supplied for a stock on the POST
         request, the JSON representation for those fields is the string ‘NA’ (Not
