@@ -125,6 +125,8 @@ class StockController:
                            for key, value in query_params.items() if key in stock)
                 ]
 
+            return jsonify(stocks), 200
+
         except Exception as e:
             logging.error(f"Error in get_stocks: {str(e)}")
             return jsonify({'server error': str(e)}), 500
