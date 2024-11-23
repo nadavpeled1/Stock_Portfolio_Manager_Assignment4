@@ -71,11 +71,11 @@ class StockController:
     @staticmethod
     def validate_symbol(symbol):
         # Validate 'symbol': must be a non-empty uppercase string
-        if not isinstance(symbol, str) or not symbol.isupper():
-            logging.error("Validation failed: 'symbol' must be an uppercase string.")
-            return False
+        if isinstance(symbol, str) and symbol.isupper():
+            return True
+        logging.error("Validation failed: 'symbol' must be an uppercase string.")
+        return False
 
-    # TODO: TEST for 415, 400, 500, 201
     def add_stock(self):
         """
         POST: The POST request provides a JSON object payload that must contain: 'symbol', 'purchase price',
@@ -104,7 +104,6 @@ class StockController:
         except Exception as e:
             return jsonify({'server error': str(e)}), 500
 
-    # TODO: TESTED for 200, 500
     def get_stocks(self):
         """
         GET: If successful, it returns a JSON array of stock objects with status code 200.
@@ -129,7 +128,6 @@ class StockController:
             logging.error(f"Error in get_stocks: {str(e)}")
             return jsonify({'server error': str(e)}), 500
 
-    # TODO: TEST for 200, 404, 500
     def get_stock(self, stock_id):
         try:
             stock = self.stock_service.get_stock_by_id(stock_id)
@@ -219,7 +217,7 @@ class StockController:
         GET: Returns the total value of the portfolio along with the current date."""
         try:
             total_value = self.stock_service.get_portfolio_value()
-            current_date = datetime.now().isoformat()
+            current_date = datetime.now().strftime("%d-%m-%Y")
 
             response = {
                 "date": current_date,

@@ -60,13 +60,7 @@ class StockService:
         try:
             stock = self.get_stock_by_id(stock_id)
         except KeyError:
-            logging.warning(f"Stock with ID '{stock_id}' not found. Returning default value of 0.")
-            return {
-                "symbol": "N/A",
-                "ticker": 0.0,
-                "stock value": 0.0
-            }
-
+            raise KeyError(f"Stock with ID '{stock_id}' not found.")
         try:
             current_price = self.fetch_stock_current_price(stock.symbol)
             stock_value = stock.shares * current_price
@@ -107,7 +101,7 @@ class StockService:
             A list of stock objects represented as dictionaries.
         """
         if not self.portfolio or not isinstance(self.portfolio, dict):
-            raise ValueError("Portfolio is empty or invalid.")
+            return []
 
         return [stock.to_dict() for stock in self.portfolio.values()]
 
