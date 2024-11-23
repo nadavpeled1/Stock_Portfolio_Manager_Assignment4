@@ -1,14 +1,16 @@
 import unittest
-import json
+from datetime import datetime
 from unittest.mock import patch, MagicMock
 from controller import StockController
-import requests
-
 from stock import Stock
-INITIAL_PORTFOLIO = {
+
+INITIAL_PORTFOLIO_SINGLE = {
     "1": Stock("1", "Apple Inc.", "AAPL",
-               150.0, "2023-10-01", 10),
-}
+               150.0, "2023-10-01", 10)}
+
+INITIAL_PORTFOLIO_DOUBLE = INITIAL_PORTFOLIO_SINGLE | {
+    "2": Stock("2", "Microsoft Corp.", "MSFT",
+               300.0, "2023-11-01", 20)}
 
 
 class TestController(unittest.TestCase):
@@ -162,10 +164,7 @@ class TestController(unittest.TestCase):
 
     def test_get_stocks(self):
         # Set up the StockService and populate it with test data
-        self.controller_service.stock_service.portfolio = {
-            "1": Stock("1", "Apple Inc.", "AAPL", 150.0, "2023-10-01", 10),
-            "2": Stock("2", "Microsoft Corp.", "MSFT", 300.0, "2023-11-01", 20),
-        }
+        self.controller_service.stock_service.portfolio = INITIAL_PORTFOLIO_DOUBLE
 
         # Test cases
         cases = [
@@ -298,7 +297,7 @@ class TestController(unittest.TestCase):
 
     def test_update_stock(self):
         # Set up the StockService with initial stock data
-        self.controller_service.stock_service.portfolio = INITIAL_PORTFOLIO
+        self.controller_service.stock_service.portfolio = INITIAL_PORTFOLIO_SINGLE
 
         # Valid payload for updating the stock
         valid_payload = {
@@ -409,7 +408,7 @@ class TestController(unittest.TestCase):
             with self.subTest(case=case["description"]):
                 # Ensure setup is called for each subtest
                 self.setUp()
-                self.controller_service.stock_service.portfolio = INITIAL_PORTFOLIO
+                self.controller_service.stock_service.portfolio = INITIAL_PORTFOLIO_SINGLE
 
                 # Perform the PUT request
                 response = self.client.put(
@@ -450,7 +449,7 @@ class TestController(unittest.TestCase):
         for case in cases:
             with self.subTest(case=case["description"]):
                 self.setUp()
-                self.controller_service.stock_service.portfolio = INITIAL_PORTFOLIO
+                self.controller_service.stock_service.portfolio = INITIAL_PORTFOLIO_SINGLE
 
                 # Set up the mock price if applicable
                 if case["mock_price"] is not None:
@@ -467,6 +466,33 @@ class TestController(unittest.TestCase):
                     self.assertEqual(response.json, case["expected_response"])
                 else:
                     self.assertEqual(response.json, case["expected_response"])
+
+    @patch('service.StockService.fetch_stock_current_price')
+    def test_portfolio_value(self, mock_fetch_price):
+        self.controller_service.stock_service.portfolio = INITIAL_PORTFOLIO_DOUBLE
+
+        # Mock current prices for the stocks
+        mock_prices = {
+            "AAPL": 200.0,
+            "MSFT": 250.0
+        }
+
+        def fetch_price_side_effect(symbol):
+            return mock_prices[symbol]
+
+        # Set the side effect for fetch_stock_current_price
+        mock_fetch_price.side_effect = fetch_price_side_effect
+
+        # Perform the GET request for portfolio value
+        response = self.controller_service.app.test_client().get('/portfolio-value')
+
+        # Calculate the expected total portfolio value
+        expected_total_value = (10 * mock_prices["AAPL"]) + (20 * mock_prices["MSFT"])
+
+        # Assert the response
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("portfolio value", response.json)
+        self.assertEqual(response.json["portfolio value"], expected_total_value)
 
 
 if __name__ == '__main__':
