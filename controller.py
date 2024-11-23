@@ -71,9 +71,10 @@ class StockController:
     @staticmethod
     def validate_symbol(symbol):
         # Validate 'symbol': must be a non-empty uppercase string
-        if not isinstance(symbol, str) or not symbol.isupper():
-            logging.error("Validation failed: 'symbol' must be an uppercase string.")
-            return False
+        if isinstance(symbol, str) and symbol.isupper():
+            return True
+        logging.error("Validation failed: 'symbol' must be an uppercase string.")
+        return False
 
     # TODO: TEST for 415, 400, 500, 201
     def add_stock(self):
