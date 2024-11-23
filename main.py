@@ -1,15 +1,21 @@
-#This is a sample Python script.
-
-#Press ⌃R to execute it or replace it with your code.
-#Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+from controller import StockController
 
 
-def print_hi(name):
-	#Use a breakpoint in the code line below to debug your script.
-	print(f'Hi, {name}')
-	#Press ⌘F8 to toggle the breakpoint.
+def main():
+    """
+    Entry point for the Stock Portfolio Manager application.
+    Initializes the StockController and runs the Flask app.
+    """
+    try:
+        # Initialize the StockController
+        controller = StockController()
+
+        # Run the Flask app
+        controller.app.run(host='0.0.0.0', port=5000, debug=True)
+
+    except Exception as e:
+        print(f"Error starting the Stock Portfolio Manager: {str(e)}")
 
 
-#Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-	print_hi('PyCharm')
+    main()
