@@ -4,6 +4,8 @@ from unittest.mock import patch, MagicMock
 from controller import StockController
 import requests
 
+from stock import Stock
+
 
 class TestController(unittest.TestCase):
     def setUp(self):
@@ -39,6 +41,7 @@ class TestController(unittest.TestCase):
         # Run each test case
         for case in cases:
             with self.subTest(case=case["description"]):
+                self.setUp()
                 # Perform the POST request
                 response = self.client.post(
                     '/stocks',
@@ -153,74 +156,275 @@ class TestController(unittest.TestCase):
         self.assertIn("error", response.json)
         self.assertEqual(response.json["error"], "Malformed data")
 
+    def test_get_stocks(self):
+        # Set up the StockService and populate it with test data
+        self.controller_service.stock_service.portfolio = {
+            "1": Stock("1", "Apple Inc.", "AAPL", 150.0, "2023-10-01", 10),
+            "2": Stock("2", "Microsoft Corp.", "MSFT", 300.0, "2023-11-01", 20),
+        }
 
+        # Test cases
+        cases = [
+            {
+                "description": "Get all stocks, expect 200",
+                "query_params": "",
+                "expected_status": 200,
+                "expected_response": [
+                    {
+                        "id": "1",
+                        "name": "Apple Inc.",
+                        "symbol": "AAPL",
+                        "purchase_price": 150.0,
+                        "purchase_date": "2023-10-01",
+                        "shares": 10
+                    },
+                    {
+                        "id": "2",
+                        "name": "Microsoft Corp.",
+                        "symbol": "MSFT",
+                        "purchase_price": 300.0,
+                        "purchase_date": "2023-11-01",
+                        "shares": 20
+                    }
+                ]
+            },
+            {
+                "description": "Filter stocks by symbol (AAPL), expect 200",
+                "query_params": "?symbol=AAPL",
+                "expected_status": 200,
+                "expected_response": [
+                    {
+                        "id": "1",
+                        "name": "Apple Inc.",
+                        "symbol": "AAPL",
+                        "purchase_price": 150.0,
+                        "purchase_date": "2023-10-01",
+                        "shares": 10
+                    }
+                ]
+            },
+            {
+                "description": "Filter stocks by non-existent symbol, expect 200 with empty list",
+                "query_params": "?symbol=GOOGL",
+                "expected_status": 200,
+                "expected_response": []
+            }
+        ]
 
+        for case in cases:
+            with self.subTest(case=case["description"]):
+                # Perform the GET request with query parameters
+                response = self.client.get(f'/stocks{case["query_params"]}')
 
+                # Assert the response
+                self.assertEqual(response.status_code, case["expected_status"])
+                self.assertEqual(response.json, case["expected_response"])
 
-#     #TODO: did i made a working test?
-#     @patch('controller.requests.post')
-#     def test_add_timeout(self, mock_post):
-#         # Simulate a timeout
-#         mock_post.side_effect = requests.exceptions.Timeout
-#
-#         # Define the payload
-#         payload = {
-#             "symbol": "AAPL",
-#             "purchase_price": 150.0,
-#             "shares": 10,
-#             "name": "Apple Inc.",
-#             "purchase_date": "2023-10-01"
-#         }
-#
-#         # Make a POST request to add the stock
-#         response = self.app.post('/stocks', data=json.dumps(payload), content_type='application/json')
-#
-#         # Check the response status code
-#         self.assertEqual(response.status_code, 500)
-#
-#         # Check the response data
-#         response_data = json.loads(response.data)
-#         self.assertIn('error', response_data)
-#
-#
-#     # GET /stocks tests
-#     # If successful, it returns a JSON array of stock objects with a status code of 200.
-#     # Possible error status codes returned: 500.
-#     # The endpoint should support query strings of the form <field>=<value>.
-#     def test_get_stocks(self):
-#         # add manually a 2 stocks to simulate a service wiht 2 stocks
-#         stock_service = StockService()
-#         stock_service.add_stock("Apple", "AAPL", 150.0, "2023-01-01", 10)
-#         stock_service.add_stock("Google", "GOOGL", 100.0, "2023-01-01", 5)
-#         print("added 2 stocks successfully")
-#         # Make a GET request to get the stocks
-#         response = self.app.get('/stocks')
-#
-#         # Check the response status code
-#         self.assertEqual(response.status_code, 200)
-#
-#         # Check the response data
-#         response_data = json.loads(response.data)
-#         self.assertIsInstance(response_data, list)
-#         self.assertEqual(len(response_data), 2)
-#         self.assertEqual(response_data[0]['name'], 'Apple')
-#         self.assertEqual(response_data[1]['name'], 'Google')
-#
-# #TODO: did i made a working test?
-#     @patch('controller.requests.get')
-#     def test_get_stocks_timeout(self, mock_get):
-#         # Simulate a timeout
-#         mock_get.side_effect = requests.exceptions.Timeout
-#
-#         # Make a GET request to get the stocks
-#         response = self.app.get('/stocks')
-#
-#         # Check the response status code
-#         self.assertEqual(response.status_code, 500)
-#
-#         # Check the response data
-#         response_data = json.loads(response.data)
-#         self.assertIn('error', response_data)
+    def test_get_stock(self):
+        # Create a real stock and an in-memory portfolio
+        stock = Stock("1", "Apple Inc.", "AAPL", 150.0, "2023-10-01", 10)
+        portfolio = {"1": stock}  # Directly define the portfolio
+
+        # Assign the portfolio to the controller's StockService
+        self.controller_service.stock_service.portfolio = portfolio
+
+        # Test cases
+        cases = [
+            {
+                "description": "Valid stock ID, expect 200",
+                "stock_id": "1",
+                "expected_status": 200,
+                "expected_response": stock.__dict__,
+            },
+            {
+                "description": "Non-existent stock ID, expect 404",
+                "stock_id": "nonexistent",
+                "expected_status": 404,
+                "expected_response": {"error": "Not found"},
+            }
+        ]
+
+        # Run the test cases
+        for case in cases:
+            with self.subTest(case=case["description"]):
+                # Perform the GET request
+                response = self.client.get(f'/stocks/{case["stock_id"]}')
+
+                # Assert the response
+                self.assertEqual(response.status_code, case["expected_status"])
+                self.assertEqual(response.json, case["expected_response"])
+
+    def test_remove_stock(self):
+        # Set up the StockService and populate it with test data
+        self.controller_service.stock_service.portfolio = {
+            "1": Stock("1", "Apple Inc.", "AAPL", 150.0, "2023-10-01", 10),
+            "2": Stock("2", "Microsoft Corp.", "MSFT", 300.0, "2023-11-01", 20),
+        }
+
+        # Test cases
+        cases = [
+            {
+                "description": "Remove an existing stock, expect 204",
+                "stock_id": "1",
+                "expected_status": 204,
+                "expected_response": None  # No content for 204 status
+            },
+            {
+                "description": "Remove a non-existent stock, expect 404",
+                "stock_id": "3",
+                "expected_status": 404,
+                "expected_response": {"error": "Not found"}
+            }
+        ]
+
+        for case in cases:
+            with self.subTest(case=case["description"]):
+                # Perform the DELETE request
+                response = self.client.delete(f'/stock/{case["stock_id"]}')
+
+                # Assert the response status code
+                self.assertEqual(response.status_code, case["expected_status"])
+
+                # Assert the response body (if any)
+                if case["expected_response"] is not None:
+                    self.assertEqual(response.json, case["expected_response"])
+
+        # Verify that the stock was removed from the portfolio
+        self.assertNotIn("1", self.controller_service.stock_service.portfolio)
+
+    def test_update_stock(self):
+        # Set up the StockService with initial stock data
+        self.controller_service.stock_service.portfolio = {
+            "1": Stock("1", "Apple Inc.", "AAPL", 150.0, "2023-10-01", 10),
+        }
+
+        # Valid payload for updating the stock
+        valid_payload = {
+            "id": "1",
+            "symbol": "AAPL",
+            "name": "Updated Apple Inc.",
+            "purchase_price": 200.0,
+            "purchase_date": "2023-12-01",
+            "shares": 20
+        }
+
+        # Perform the PUT request
+        response = self.client.put(
+            '/stocks/1',
+            json=valid_payload,
+            content_type='application/json'
+        )
+
+        # Assert the response for successful update
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json, {"id": "1"})
+
+        # Verify the stock is updated in the portfolio
+        updated_stock = self.controller_service.stock_service.portfolio["1"]
+        self.assertEqual(updated_stock.name, "Updated Apple Inc.")
+        self.assertEqual(updated_stock.purchase_price, 200.0)
+        self.assertEqual(updated_stock.shares, 20)
+
+    def test_update_stock_bad_cases(self):
+        initial_portfolio = {
+            "1": Stock("1", "Apple Inc.", "AAPL",
+                       150.0, "2023-10-01", 10),
+        }
+
+        # Test cases for bad requests
+        cases = [
+            {
+                "description": "Invalid content type, expect 415",
+                "stock_id": "1",
+                "payload": {
+                    "id": "1",
+                    "symbol": "AAPL",
+                    "name": "Updated Apple Inc.",
+                    "purchase_price": 200.0,
+                    "purchase_date": "2023-12-01",
+                    "shares": 20
+                },
+                "content_type": "text/plain",
+                "expected_status": 415,
+                "expected_response": {"error": "Expected application/json media type"}
+            },
+            {
+                "description": "Missing required fields, expect 400",
+                "stock_id": "1",
+                "payload": {
+                    "id": "1",
+                    "symbol": "AAPL",
+                    # Missing 'name', 'purchase_price', 'purchase_date', 'shares'
+                },
+                "content_type": "application/json",
+                "expected_status": 400,
+                "expected_response": {"error": "Malformed data"}
+            },
+            {
+                "description": "ID mismatch, expect 400",
+                "stock_id": "2",  # URL stock_id doesn't match payload ID
+                "payload": {
+                    "id": "1",
+                    "symbol": "AAPL",
+                    "name": "Updated Apple Inc.",
+                    "purchase_price": 200.0,
+                    "purchase_date": "2023-12-01",
+                    "shares": 20
+                },
+                "content_type": "application/json",
+                "expected_status": 400,
+                "expected_response": {"error": "ID mismatch"}
+            },
+            {
+                "description": "Invalid purchase price, expect 400",
+                "stock_id": "1",
+                "payload": {
+                    "id": "1",
+                    "symbol": "AAPL",
+                    "name": "Updated Apple Inc.",
+                    "purchase_price": -200.0,  # Invalid negative price
+                    "purchase_date": "2023-12-01",
+                    "shares": 20
+                },
+                "content_type": "application/json",
+                "expected_status": 400,
+                "expected_response": {"error": "Invalid data"}
+            },
+            {
+                "description": "Invalid number of shares, expect 400",
+                "stock_id": "1",
+                "payload": {
+                    "id": "1",
+                    "symbol": "AAPL",
+                    "name": "Updated Apple Inc.",
+                    "purchase_price": 200.0,
+                    "purchase_date": "2023-12-01",
+                    "shares": -10  # Invalid negative shares
+                },
+                "content_type": "application/json",
+                "expected_status": 400,
+                "expected_response": {"error": "Invalid data"}
+            }
+        ]
+
+        # Run the test cases
+        for case in cases:
+            with self.subTest(case=case["description"]):
+                # Ensure setup is called for each subtest
+                self.setUp()
+                self.controller_service.stock_service.portfolio = initial_portfolio
+
+                # Perform the PUT request
+                response = self.client.put(
+                    f'/stocks/{case["stock_id"]}',
+                    json=case.get("payload") if case["content_type"] == "application/json" else None,
+                    data=case.get("payload") if case["content_type"] != "application/json" else None,
+                    content_type=case["content_type"]
+                )
+
+                # Assert the response status and body
+                self.assertEqual(response.status_code, case["expected_status"])
+                self.assertEqual(response.json, case["expected_response"])
 
 
 if __name__ == '__main__':
