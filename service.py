@@ -1,6 +1,8 @@
 import logging
-from stock import Stock
+import time
 import requests
+from requests import RequestException
+from stock import Stock
 
 NINJA_API_KEY = "t7kGKURsW31xlUX9jhmX6Q==JKxHUYND1othy0fC"
 API_URL = 'https://api.api-ninjas.com/v1/stockprice?ticker={}'
@@ -79,29 +81,25 @@ class StockService:
             raise ValueError(f"Error fetching stock value for '{stock.symbol}': {str(e)}")
 
     @staticmethod
-    def fetch_stock_current_price(symbol: str) -> float:
+    def fetch_stock_current_price(symbol: str, retries=3, delay=2) -> float:
         """
         For more info: https://api-ninjas.com/api/stockprice
         """
-        try:
-            # Ensure the symbol is valid and properly formatted
-            symbol = symbol.strip().upper()
+        for attempt in range(retries):
+            try:
+                # Ensure the symbol is valid and properly formatted
+                symbol = symbol.strip().upper()
+                response = requests.get(API_URL.format(symbol), headers={'X-Api-Key': NINJA_API_KEY}, timeout=10)
 
-            # Make the API request with a timeout
-            response = requests.get(
-                API_URL.format(symbol), headers={'X-Api-Key': NINJA_API_KEY},
-                timeout=10)
+                if response.status_code == requests.codes.ok and 'price' in response.json():
+                    return round(response.json()['price'], 2)
+                raise ValueError(f"Invalid API response: {response.text}")
 
-            if response.status_code == requests.codes.ok:
-                data = response.json()
-                if 'price' not in data:
-                    raise ValueError(f"API response missing 'price' field: {data}")
-                return round(data['price'], 2)
-            else:
-                raise ValueError(f"API request failed with status code {response.status_code}: {response.text}")
-
-        except requests.exceptions.RequestException as e:
-            raise ValueError(f"Error while making API request: {str(e)}")
+            except RequestException as e:
+                if attempt < retries - 1:
+                    time.sleep(delay)
+                else:
+                    raise ValueError(f"API request failed after {retries} attempts: {str(e)}")
 
     def get_stocks(self) -> list[dict[str, any]]:
         """
