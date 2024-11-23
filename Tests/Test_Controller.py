@@ -5,6 +5,10 @@ from controller import StockController
 import requests
 
 from stock import Stock
+INITIAL_PORTFOLIO = {
+    "1": Stock("1", "Apple Inc.", "AAPL",
+               150.0, "2023-10-01", 10),
+}
 
 
 class TestController(unittest.TestCase):
@@ -294,9 +298,7 @@ class TestController(unittest.TestCase):
 
     def test_update_stock(self):
         # Set up the StockService with initial stock data
-        self.controller_service.stock_service.portfolio = {
-            "1": Stock("1", "Apple Inc.", "AAPL", 150.0, "2023-10-01", 10),
-        }
+        self.controller_service.stock_service.portfolio = INITIAL_PORTFOLIO
 
         # Valid payload for updating the stock
         valid_payload = {
@@ -326,11 +328,6 @@ class TestController(unittest.TestCase):
         self.assertEqual(updated_stock.shares, 20)
 
     def test_update_stock_bad_cases(self):
-        initial_portfolio = {
-            "1": Stock("1", "Apple Inc.", "AAPL",
-                       150.0, "2023-10-01", 10),
-        }
-
         # Test cases for bad requests
         cases = [
             {
@@ -412,7 +409,7 @@ class TestController(unittest.TestCase):
             with self.subTest(case=case["description"]):
                 # Ensure setup is called for each subtest
                 self.setUp()
-                self.controller_service.stock_service.portfolio = initial_portfolio
+                self.controller_service.stock_service.portfolio = INITIAL_PORTFOLIO
 
                 # Perform the PUT request
                 response = self.client.put(
@@ -425,6 +422,51 @@ class TestController(unittest.TestCase):
                 # Assert the response status and body
                 self.assertEqual(response.status_code, case["expected_status"])
                 self.assertEqual(response.json, case["expected_response"])
+
+    @patch('service.StockService.fetch_stock_current_price')
+    def test_stock_value(self, mock_fetch_price):
+        # Define test cases
+        cases = [
+            {
+                "description": "Valid stock ID, expect 200",
+                "stock_id": "1",
+                "mock_price": 200.0,  # Mocked current price
+                "expected_status": 200,
+                "expected_response": {
+                    "symbol": "AAPL",
+                    "ticker": 200.0,
+                    "stock value": 2000.0
+                }
+            },
+            {
+                "description": "Non-existent stock ID, expect 404",
+                "stock_id": "999",
+                "mock_price": None,  # No price fetching needed
+                "expected_status": 404,
+                "expected_response": {"error": "Not found"}
+            }
+        ]
+
+        for case in cases:
+            with self.subTest(case=case["description"]):
+                self.setUp()
+                self.controller_service.stock_service.portfolio = INITIAL_PORTFOLIO
+
+                # Set up the mock price if applicable
+                if case["mock_price"] is not None:
+                    mock_fetch_price.return_value = case["mock_price"]
+
+                # Perform the GET request
+                response = self.controller_service.app.test_client().get(f'/stock-value/{case["stock_id"]}')
+
+                # Assert the response status code
+                self.assertEqual(response.status_code, case["expected_status"])
+
+                # Assert the response data
+                if case["expected_status"] == 200:
+                    self.assertEqual(response.json, case["expected_response"])
+                else:
+                    self.assertEqual(response.json, case["expected_response"])
 
 
 if __name__ == '__main__':
