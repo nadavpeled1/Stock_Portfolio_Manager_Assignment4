@@ -101,7 +101,7 @@ class StockService:
             A list of stock objects represented as dictionaries.
         """
         if not self.portfolio or not isinstance(self.portfolio, dict):
-            raise ValueError("Portfolio is empty or invalid.")
+            return []
 
         return [stock.to_dict() for stock in self.portfolio.values()]
 

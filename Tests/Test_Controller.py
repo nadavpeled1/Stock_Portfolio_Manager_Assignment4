@@ -163,13 +163,10 @@ class TestController(unittest.TestCase):
         self.assertEqual(response.json["error"], "Malformed data")
 
     def test_get_stocks(self):
-        # Set up the StockService and populate it with test data
-        self.controller_service.stock_service.portfolio = INITIAL_PORTFOLIO_DOUBLE
-
-        # Test cases
         cases = [
             {
                 "description": "Get all stocks, expect 200",
+                "initial_portfolio": INITIAL_PORTFOLIO_DOUBLE,
                 "query_params": "",
                 "expected_status": 200,
                 "expected_response": [
@@ -193,6 +190,7 @@ class TestController(unittest.TestCase):
             },
             {
                 "description": "Filter stocks by symbol (AAPL), expect 200",
+                "initial_portfolio": INITIAL_PORTFOLIO_DOUBLE,
                 "query_params": "?symbol=AAPL",
                 "expected_status": 200,
                 "expected_response": [
@@ -208,7 +206,15 @@ class TestController(unittest.TestCase):
             },
             {
                 "description": "Filter stocks by non-existent symbol, expect 200 with empty list",
+                "initial_portfolio": INITIAL_PORTFOLIO_DOUBLE,
                 "query_params": "?symbol=GOOGL",
+                "expected_status": 200,
+                "expected_response": []
+            },
+            {
+                "description": "Get all from an empty portfolio",
+                "initial_portfolio": {},
+                "query_params": "",
                 "expected_status": 200,
                 "expected_response": []
             }
@@ -216,6 +222,9 @@ class TestController(unittest.TestCase):
 
         for case in cases:
             with self.subTest(case=case["description"]):
+                self.setUp()
+                self.controller_service.stock_service.portfolio = case["initial_portfolio"]
+
                 # Perform the GET request with query parameters
                 response = self.client.get(f'/stocks{case["query_params"]}')
 
