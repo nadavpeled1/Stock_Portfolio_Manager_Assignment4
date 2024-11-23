@@ -16,41 +16,147 @@ class TestController(unittest.TestCase):
         mock_service.symbol_exists.return_value = False
         mock_service.add_stock.return_value = MagicMock(id="stock123")
 
-        payload = {
-            "symbol": "AAPL",
-            "purchase_price": 150.0,
-            "shares": 10,
-            "name": "Apple Inc.",
-            "purchase_date": "2023-10-01"
-        }
+        # Define test cases
+        cases = [
+            {
+                "description": "Complete payload, expecting 201",
+                "payload": {
+                    "symbol": "AAPL",
+                    "purchase_price": 150.0,
+                    "shares": 10,
+                    "name": "Apple Inc.",
+                    "purchase_date": "2023-10-01"}
+            },
+            {
+                "description": "Partial payload, expecting 201",
+                "payload": {
+                    "symbol": "AAPL",
+                    "purchase_price": 150.0,
+                    "shares": 10}
+            }
+        ]
 
+        # Run each test case
+        for case in cases:
+            with self.subTest(case=case["description"]):
+                # Perform the POST request
+                response = self.client.post(
+                    '/stocks',
+                    json=case["payload"],
+                    content_type='application/json'
+                )
+
+                # Assert the response status and content
+                self.assertEqual(response.status_code, 201)
+                self.assertIn("id", response.json)
+
+    @patch('service.StockService')  # Mock the StockService dependency
+    def test_add_invalid_stock(self, MockStockService):
+        mock_service = MockStockService.return_value
+        mock_service.symbol_exists.return_value = False
+
+        # Define invalid test cases
+        cases = [
+            {
+                "description": "Missing required field 'symbol'",
+                "payload": {
+                    "purchase_price": 150.0,
+                    "shares": 10
+                },
+                "expected_status": 400,
+                "expected_error": "Malformed data",
+            },
+            {
+                "description": "Negative 'purchase_price'",
+                "payload": {
+                    "symbol": "AAPL",
+                    "purchase_price": -150.0,
+                    "shares": 10
+                },
+                "expected_status": 400,
+                "expected_error": "Malformed data",
+            },
+            {
+                "description": "Zero 'shares'",
+                "payload": {
+                    "symbol": "AAPL",
+                    "purchase_price": 150.0,
+                    "shares": 0
+                },
+                "expected_status": 400,
+                "expected_error": "Malformed data",
+            },
+            {
+                "description": "Invalid content type (not JSON)",
+                "payload": "Invalid payload",
+                "expected_status": 415,
+                "expected_error": "Expected application/json media type",
+                "content_type": "text/plain"
+            }
+        ]
+
+        # Run each invalid case
+        for case in cases:
+            with self.subTest(case=case["description"]):
+                # Determine content type
+                content_type = case.get("content_type", "application/json")
+
+                # Perform the POST request
+                response = self.client.post(
+                    '/stocks',
+                    json=case["payload"] if content_type == "application/json" else None,
+                    data=case["payload"] if content_type != "application/json" else None,
+                    content_type=content_type
+                )
+
+                # Assert the response
+                self.assertEqual(response.status_code, case["expected_status"])
+                self.assertIn("error", response.json)
+                self.assertEqual(response.json["error"], case["expected_error"])
+
+    def test_duplicate_stock_symbol(self):
+        payloads = [
+            {
+                "symbol": "AAPL",
+                "purchase_price": 150.0,
+                "shares": 10,
+                "name": "Apple Inc.",
+                "purchase_date": "2023-10-01"
+            },{
+                "symbol": "AAPL",
+                "purchase_price": 160.0,
+                "shares": 50,
+                "name": "Apple Inc.",
+                "purchase_date": "2023-10-01"
+            }]
+
+        # Add the first stock
         response = self.client.post(
             '/stocks',
-            json=payload,
+            json=payloads[0],
             content_type='application/json'
         )
 
-        # Assert
+        # Assert the first addition is successful
         self.assertEqual(response.status_code, 201)
         self.assertIn("id", response.json)
 
-#     def test_add_invalid_stock(self):
-#         # Define the payload with missing required parameters
-#         payload = {
-#             "symbol": "AAPL",
-#             "purchase_price": 150.0
-#         }
-#
-#         # Make a POST request to add the stock
-#         response = self.app.post('/stocks', data=json.dumps(payload), content_type='application/json')
-#
-#         # Check the response status code
-#         self.assertEqual(response.status_code, 400)
-#
-#         # Check the response data
-#         response_data = json.loads(response.data)
-#         self.assertIn('error', response_data)
-#
+        # Add the second stock with the same symbol
+        response = self.client.post(
+            '/stocks',
+            json=payloads[1],
+            content_type='application/json'
+        )
+
+        # Assert the second addition fails due to duplication
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("error", response.json)
+        self.assertEqual(response.json["error"], "Malformed data")
+
+
+
+
+
 #     #TODO: did i made a working test?
 #     @patch('controller.requests.post')
 #     def test_add_timeout(self, mock_post):

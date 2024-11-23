@@ -76,7 +76,6 @@ class StockController:
         logging.error("Validation failed: 'symbol' must be an uppercase string.")
         return False
 
-    # TODO: TEST for 415, 400, 500, 201
     def add_stock(self):
         """
         POST: The POST request provides a JSON object payload that must contain: 'symbol', 'purchase price',
