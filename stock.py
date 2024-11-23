@@ -1,8 +1,10 @@
-# stock.py
+from datetime import datetime
+
 
 class Stock:
-    def __init__(self, id: str, name: str, symbol: str, purchase_price: float, purchase_date: str, shares: int):
-        self.id = id  # ID will be auto-generated in the service
+    def __init__(self, built_in_id: str, name: str, symbol: str,
+                 purchase_price: float, purchase_date: str, shares: int):
+        self.id = built_in_id  # ID will be auto-generated in the service
         self.name = name
         self.symbol = symbol
         self.purchase_price = purchase_price
