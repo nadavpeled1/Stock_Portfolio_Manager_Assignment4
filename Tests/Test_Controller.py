@@ -6,11 +6,11 @@ from stock import Stock
 
 INITIAL_PORTFOLIO_SINGLE = {
     "1": Stock("1", "Apple Inc.", "AAPL",
-               150.0, "2023-10-01", 10)}
+               150.0, "01-10-2023", 10)}
 
 INITIAL_PORTFOLIO_DOUBLE = INITIAL_PORTFOLIO_SINGLE | {
     "2": Stock("2", "Microsoft Corp.", "MSFT",
-               300.0, "2023-11-01", 20)}
+               300.0, "01-11-2023", 20)}
 
 
 class TestController(unittest.TestCase):
@@ -33,7 +33,7 @@ class TestController(unittest.TestCase):
                     "purchase_price": 150.0,
                     "shares": 10,
                     "name": "Apple Inc.",
-                    "purchase_date": "2023-10-01"}
+                    "purchase_date": "01-10-2023"}
             },
             {
                 "description": "Partial payload, expecting 201",
@@ -130,13 +130,13 @@ class TestController(unittest.TestCase):
                 "purchase_price": 150.0,
                 "shares": 10,
                 "name": "Apple Inc.",
-                "purchase_date": "2023-10-01"
+                "purchase_date": "01-10-2023"
             },{
                 "symbol": "AAPL",
                 "purchase_price": 160.0,
                 "shares": 50,
                 "name": "Apple Inc.",
-                "purchase_date": "2023-10-01"
+                "purchase_date": "01-10-2023"
             }]
 
         # Add the first stock
@@ -175,7 +175,7 @@ class TestController(unittest.TestCase):
                         "name": "Apple Inc.",
                         "symbol": "AAPL",
                         "purchase_price": 150.0,
-                        "purchase_date": "2023-10-01",
+                        "purchase_date": "01-10-2023",
                         "shares": 10
                     },
                     {
@@ -183,7 +183,7 @@ class TestController(unittest.TestCase):
                         "name": "Microsoft Corp.",
                         "symbol": "MSFT",
                         "purchase_price": 300.0,
-                        "purchase_date": "2023-11-01",
+                        "purchase_date": "01-11-2023",
                         "shares": 20
                     }
                 ]
@@ -199,7 +199,7 @@ class TestController(unittest.TestCase):
                         "name": "Apple Inc.",
                         "symbol": "AAPL",
                         "purchase_price": 150.0,
-                        "purchase_date": "2023-10-01",
+                        "purchase_date": "01-10-2023",
                         "shares": 10
                     }
                 ]
@@ -234,7 +234,7 @@ class TestController(unittest.TestCase):
 
     def test_get_stock(self):
         # Create a real stock and an in-memory portfolio
-        stock = Stock("1", "Apple Inc.", "AAPL", 150.0, "2023-10-01", 10)
+        stock = Stock("1", "Apple Inc.", "AAPL", 150.0, "01-10-2023", 10)
         portfolio = {"1": stock}  # Directly define the portfolio
 
         # Assign the portfolio to the controller's StockService
@@ -269,8 +269,8 @@ class TestController(unittest.TestCase):
     def test_remove_stock(self):
         # Set up the StockService and populate it with test data
         self.controller_service.stock_service.portfolio = {
-            "1": Stock("1", "Apple Inc.", "AAPL", 150.0, "2023-10-01", 10),
-            "2": Stock("2", "Microsoft Corp.", "MSFT", 300.0, "2023-11-01", 20),
+            "1": Stock("1", "Apple Inc.", "AAPL", 150.0, "01-10-2023", 10),
+            "2": Stock("2", "Microsoft Corp.", "MSFT", 300.0, "01-11-2023", 20),
         }
 
         # Test cases
@@ -314,7 +314,7 @@ class TestController(unittest.TestCase):
             "symbol": "AAPL",
             "name": "Updated Apple Inc.",
             "purchase_price": 200.0,
-            "purchase_date": "2023-12-01",
+            "purchase_date": "01-12-2023",
             "shares": 20
         }
 
@@ -346,7 +346,7 @@ class TestController(unittest.TestCase):
                     "symbol": "AAPL",
                     "name": "Updated Apple Inc.",
                     "purchase_price": 200.0,
-                    "purchase_date": "2023-12-01",
+                    "purchase_date": "01-12-2023",
                     "shares": 20
                 },
                 "content_type": "text/plain",
@@ -373,7 +373,7 @@ class TestController(unittest.TestCase):
                     "symbol": "AAPL",
                     "name": "Updated Apple Inc.",
                     "purchase_price": 200.0,
-                    "purchase_date": "2023-12-01",
+                    "purchase_date": "01-12-2023",
                     "shares": 20
                 },
                 "content_type": "application/json",
@@ -388,7 +388,7 @@ class TestController(unittest.TestCase):
                     "symbol": "AAPL",
                     "name": "Updated Apple Inc.",
                     "purchase_price": -200.0,  # Invalid negative price
-                    "purchase_date": "2023-12-01",
+                    "purchase_date": "01-12-2023",
                     "shares": 20
                 },
                 "content_type": "application/json",
@@ -403,7 +403,7 @@ class TestController(unittest.TestCase):
                     "symbol": "AAPL",
                     "name": "Updated Apple Inc.",
                     "purchase_price": 200.0,
-                    "purchase_date": "2023-12-01",
+                    "purchase_date": "01-12-2023",
                     "shares": -10  # Invalid negative shares
                 },
                 "content_type": "application/json",

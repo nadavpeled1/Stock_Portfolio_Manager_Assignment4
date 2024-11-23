@@ -217,7 +217,7 @@ class StockController:
         GET: Returns the total value of the portfolio along with the current date."""
         try:
             total_value = self.stock_service.get_portfolio_value()
-            current_date = datetime.now().isoformat()
+            current_date = datetime.now().strftime("%d-%m-%Y")
 
             response = {
                 "date": current_date,
