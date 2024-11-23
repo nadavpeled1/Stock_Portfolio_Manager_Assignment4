@@ -11,7 +11,7 @@ def main():
         controller = StockController()
 
         # Run the Flask app
-        controller.app.run(host='0.0.0.0', port=5000, debug=True)
+        controller.app.run(host='0.0.0.0', port=5001)
 
     except Exception as e:
         print(f"Error starting the Stock Portfolio Manager: {str(e)}")
