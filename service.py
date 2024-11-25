@@ -1,4 +1,3 @@
-import logging
 import time
 import requests
 from requests import RequestException
@@ -24,7 +23,7 @@ class StockService:
         """
         stock_id = str(self.nextid)
         self.nextid += 1
-        new_stock = Stock(stock_id, name, symbol, purchase_price, purchase_date, shares)
+        new_stock = Stock(stock_id, name, symbol, round(purchase_price, 2), purchase_date, shares)
         self.portfolio[stock_id] = new_stock
         return new_stock
 
@@ -62,8 +61,8 @@ class StockService:
         except KeyError:
             raise KeyError(f"Stock with ID '{stock_id}' not found.")
         try:
-            current_price = self.fetch_stock_current_price(stock.symbol)
-            stock_value = stock.shares * current_price
+            current_price = round(self.fetch_stock_current_price(stock.symbol), 2)
+            stock_value = round(stock.shares * current_price, 2)
 
             # Return the required data as a dictionary
             return {
@@ -86,7 +85,7 @@ class StockService:
                 response = requests.get(API_URL.format(symbol), headers={'X-Api-Key': NINJA_API_KEY}, timeout=10)
 
                 if response.status_code == requests.codes.ok and 'price' in response.json():
-                    return round(response.json()['price'], 2)
+                    return response.json()['price']
                 raise ValueError(f"Invalid API response: {response.text}")
 
             except RequestException as e:
@@ -114,7 +113,7 @@ class StockService:
                     total_value += stock.shares * current_price
                 else:
                     raise ValueError(f"Price for stock {stock.symbol} not available")
-            return total_value
+            return round(total_value, 2)
         except Exception as e:
             raise ValueError(f"Error calculating portfolio value: {str(e)}")
 
