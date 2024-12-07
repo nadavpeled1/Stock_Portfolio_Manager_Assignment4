@@ -211,11 +211,11 @@ class StockController:
 
         except ValueError as e:
             stock = self.stock_service.get_stock_by_id(stock_id)
-            stock_name = stock.name if stock else "Unknown"
+            stock_symbol = stock.symbol if stock else "Unknown"
 
-            logging.error(f"Invalid stock symbol '{stock_name}' (ID: {stock_id}): {str(e)}")
+            logging.error(f"Invalid stock symbol '{stock_symbol}' (ID: {stock_id}): {str(e)}")
             return jsonify({
-                "error": f"Stock is not found: {stock_name} (ID: {stock_id})",
+                "error": f"Stock is not found: {stock_symbol} (ID: {stock_id})",
                 "suggestion": f"Please update the symbol for stock ID '{stock_id}' to a valid ticker."
             }), 404
 
@@ -239,7 +239,10 @@ class StockController:
         except ValueError as e:
             # Log the invalid stock symbol error, but return a server error
             logging.error(f"Invalid stock symbol in portfolio: {str(e)}")
-            return jsonify({"server error": f"Error calculating portfolio value: {str(e)}"}), 500
+            return jsonify({
+                "error": "Invalid stock symbol encountered in portfolio.",
+                "suggestion": str(e)
+            }), 500
 
         except Exception as e:
             logging.error(f"Error calculating portfolio value: {str(e)}")

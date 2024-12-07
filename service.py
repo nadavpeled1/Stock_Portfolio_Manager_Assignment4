@@ -84,9 +84,6 @@ class StockService:
                 symbol = symbol.strip().upper()
                 response = requests.get(API_URL.format(symbol), headers={'X-Api-Key': NINJA_API_KEY}, timeout=10)
 
-                # if response.status_code == requests.codes.ok and 'price' in response.json():
-                #     return response.json()['price']
-                # raise ValueError(f"Invalid API response: {response.text}")
                 if response.status_code == requests.codes.ok:
                     response_json = response.json()
                     if 'price' in response_json:
@@ -121,7 +118,8 @@ class StockService:
                 if current_price:
                     total_value += stock.shares * current_price
                 else:
-                    raise ValueError(f"Price for stock {stock.symbol} not available")
+                    raise ValueError(f"Price for stock '{stock.symbol}' (id: {stock.id}) "
+                                     f"is not available. Please update the symbol.")
             return round(total_value, 2)
         except Exception as e:
             raise ValueError(f"Error calculating portfolio value: {str(e)}")
