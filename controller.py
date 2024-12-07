@@ -208,6 +208,12 @@ class StockController:
         except KeyError:
             logging.error(f"Stock with ID '{stock_id}' not found.")
             return jsonify({"error": "Not found"}), 404
+
+        except ValueError as e:
+            # Treat ValueError for invalid stock symbols as a 404
+            logging.error(f"Invalid stock symbol '{stock_id}': {str(e)}")
+            return jsonify({"error": f"Stock not found: {stock_id}"}), 404
+
         except Exception as e:
             logging.error(f"Error in stock_value: {str(e)}")
             return jsonify({"server error": str(e)}), 500
@@ -224,6 +230,11 @@ class StockController:
                 "portfolio value": total_value
             }
             return jsonify(response), 200
+
+        except ValueError as e:
+            # Log the invalid stock symbol error, but return a server error
+            logging.error(f"Invalid stock symbol in portfolio: {str(e)}")
+            return jsonify({"server error": f"Error calculating portfolio value: {str(e)}"}), 500
 
         except Exception as e:
             logging.error(f"Error calculating portfolio value: {str(e)}")

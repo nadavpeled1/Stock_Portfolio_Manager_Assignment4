@@ -84,9 +84,18 @@ class StockService:
                 symbol = symbol.strip().upper()
                 response = requests.get(API_URL.format(symbol), headers={'X-Api-Key': NINJA_API_KEY}, timeout=10)
 
-                if response.status_code == requests.codes.ok and 'price' in response.json():
-                    return response.json()['price']
-                raise ValueError(f"Invalid API response: {response.text}")
+                # if response.status_code == requests.codes.ok and 'price' in response.json():
+                #     return response.json()['price']
+                # raise ValueError(f"Invalid API response: {response.text}")
+                if response.status_code == requests.codes.ok:
+                    response_json = response.json()
+                    if 'price' in response_json:
+                        return response_json['price']
+                    else:
+                        # Treat empty or unexpected responses as invalid symbols
+                        raise ValueError(f"Invalid stock symbol: {symbol}")
+                else:
+                    raise ValueError(f"Unexpected status code: {response.status_code}")
 
             except RequestException as e:
                 if attempt < retries - 1:
