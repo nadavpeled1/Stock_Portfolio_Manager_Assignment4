@@ -22,8 +22,7 @@ class StockController:
         self.app.route('/stock-value/<string:stock_id>', methods=['GET'])(self.stock_value)
         self.app.route('/portfolio-value', methods=['GET'])(self.portfolio_value)
 
-    def validate_stock_data(self, data):
-        required_fields = ['symbol', 'purchase_price', 'shares']
+    def validate_stock_data(self, data, required_fields):
         for field in required_fields:
             # Check if the field exists and is not empty
             if field not in data or not str(data[field]).strip():
@@ -89,7 +88,7 @@ class StockController:
                 return jsonify({'error': 'Expected application/json media type'}), 415
             data = request.get_json()
 
-            if not self.validate_stock_data(data):
+            if not self.validate_stock_data(data, ['symbol', 'purchase_price', 'shares']):
                 return jsonify({'error': 'Malformed data'}), 400
 
             name = data.get('name', 'NA')
@@ -156,23 +155,16 @@ class StockController:
                 return jsonify({"error": "Expected application/json media type"}), 415
 
             data = request.get_json()
-
-            # Required fields for the stock object
             required_fields = ['id', 'symbol', 'name', 'purchase_price', 'purchase_date', 'shares']
-            if not all(field in data for field in required_fields):
-                logging.error(f"Validation failed: Missing required fields in data.")
-                return jsonify({"error": "Malformed data"}), 400
+
+            if not self.validate_stock_data(data, required_fields):
+                return jsonify({'error': 'Malformed data'}), 400
 
             # Ensure the ID in the payload matches the stock_id in the URL
             if data['id'] != stock_id:
                 logging.error(
                     f"Validation failed: Stock ID in URL '{stock_id}' does not match ID in payload '{data['id']}'.")
                 return jsonify({"error": "ID mismatch"}), 400
-
-            is_valid_price = self.validate_purchase_price(data['purchase_price'])
-            is_valid_shares = self.validate_number_of_shares(data['shares'])
-            if not (is_valid_price and is_valid_shares):
-                return jsonify({"error": "Invalid data"}), 400
 
             # Update stock in the service layer
             self.stock_service.update_stock(
