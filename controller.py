@@ -210,9 +210,14 @@ class StockController:
             return jsonify({"error": "Not found"}), 404
 
         except ValueError as e:
-            # Treat ValueError for invalid stock symbols as a 404
-            logging.error(f"Invalid stock symbol '{stock_id}': {str(e)}")
-            return jsonify({"error": f"Stock not found: {stock_id}"}), 404
+            stock = self.stock_service.get_stock_by_id(stock_id)
+            stock_name = stock.name if stock else "Unknown"
+
+            logging.error(f"Invalid stock symbol '{stock_name}' (ID: {stock_id}): {str(e)}")
+            return jsonify({
+                "error": f"Stock is not found: {stock_name} (ID: {stock_id})",
+                "suggestion": f"Please update the symbol for stock ID '{stock_id}' to a valid ticker."
+            }), 404
 
         except Exception as e:
             logging.error(f"Error in stock_value: {str(e)}")
