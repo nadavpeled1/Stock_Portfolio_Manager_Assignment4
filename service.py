@@ -106,15 +106,12 @@ class StockService:
         except Exception as e:
             raise ValueError(f"Error fetching stock value for '{stock['symbol']}': {str(e)}")
 
-    def get_stocks(self) -> list[dict[str, any]]:
+    def get_stocks(self) -> list[dict]:
         """
-        Returns:
-            A list of stock objects represented as dictionaries.
+        Retrieves all stocks from the database.
+        Returns: A list of stock objects represented as dictionaries.
         """
-        if not self.portfolio or not isinstance(self.portfolio, dict):
-            return []
-
-        return [stock.to_dict() for stock in self.portfolio.values()]
+        return list(self.stocks_collection.find())
 
     def get_portfolio_value(self) -> float:
         total_value = 0.0
@@ -132,10 +129,13 @@ class StockService:
             raise ValueError(f"Error calculating portfolio value: {str(e)}")
 
     def symbol_exists(self, symbol: str) -> bool:
-        return any(stock.symbol == symbol for stock in self.portfolio.values())
+        return self.stocks_collection.find_one({"symbol": symbol}) is not None
 
     def stock_id_exists(self, stock_id: str) -> bool:
-        return stock_id in self.portfolio
+        try:
+            return self.stocks_collection.find_one({"_id": ObjectId(stock_id)}) is not None
+        except Exception:
+            return False
 
     @staticmethod
     def convert_to_object_id(stock_id: str) -> ObjectId:
