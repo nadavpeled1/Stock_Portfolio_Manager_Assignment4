@@ -1,4 +1,5 @@
 from controller import StockController
+from pymongo import MongoClient
 
 
 def main():
@@ -7,8 +8,11 @@ def main():
     Initializes the StockController and runs the Flask app.
     """
     try:
-        # Initialize the StockController
-        controller = StockController()
+        client = MongoClient("mongodb://mongo:27017/")
+        db = client["stock_portfolio"]
+        stocks_collection = db["stocks"]
+
+        controller = StockController(stocks_collection)
 
         # Run the Flask app
         controller.app.run(host='0.0.0.0', port=5001)

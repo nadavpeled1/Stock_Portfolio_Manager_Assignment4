@@ -5,9 +5,9 @@ from service import StockService
 
 
 class StockController:
-    def __init__(self):
+    def __init__(self, stocks_collection):
         self.app = Flask(__name__)
-        self.stock_service = StockService()
+        self.stock_service = StockService(stocks_collection)
         self.setup_routes()
 
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
