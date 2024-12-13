@@ -29,52 +29,37 @@ class StockService:
 
     def get_stock_by_id(self, stock_id: str) -> dict:
         try:
-            stock = self.stocks_collection.find_one({"_id": ObjectId(stock_id)})
+            stock = self.stocks_collection.find_one({"_id": self.convert_to_object_id(stock_id)})
             if not stock:
                 raise KeyError(f"Stock with id '{stock_id}' not found in the portfolio.")
             return stock
         except Exception as e:
-            raise KeyError(f"Error finding stock with id '{stock_id}': {e}")
+            raise KeyError(f"Stock with id '{stock_id}' not found. Ensure the ID is correct: {e}.")
 
-    def remove_stock(self, stock_id: str) -> None:
-        if stock_id in self.portfolio:
-            del self.portfolio[stock_id]
-        else:
-            raise KeyError(f"Stock with id '{stock_id}' not found in the portfolio.")
-
-    def update_stock(self, stock_id: str, updated_data: dict) -> None:
+    def delete_stock(self, stock_id: str) -> int:
         """
-        Updates the stock with the given stock_id using the provided updated_data.
-        """
-        if stock_id not in self.portfolio:
-            raise KeyError(f"Stock with ID '{stock_id}' not found.")
-
-        stock = self.portfolio[stock_id]
-
-        # Update stock fields with new values or retain existing ones
-        stock.symbol = updated_data.get('symbol', stock.symbol)
-        stock.name = updated_data.get('name', stock.name)
-        stock.purchase_price = updated_data.get('purchase_price', stock.purchase_price)
-        stock.purchase_date = updated_data.get('purchase_date', stock.purchase_date)
-        stock.shares = updated_data.get('shares', stock.shares)
-
-    def get_stock_value(self, stock_id: str) -> dict:
+         Deletes a stock by its ID.
+         Returns: The number of documents deleted (0 or 1).
+         """
         try:
-            stock = self.get_stock_by_id(stock_id)
-        except KeyError:
-            raise KeyError(f"Stock with ID '{stock_id}' not found.")
-        try:
-            current_price = round(self.fetch_stock_current_price(stock.symbol), 2)
-            stock_value = round(stock.shares * current_price, 2)
-
-            # Return the required data as a dictionary
-            return {
-                "symbol": stock.symbol,
-                "ticker": current_price,
-                "stock value": stock_value
-            }
+            result = self.stocks_collection.delete_one({"_id": self.convert_to_object_id(stock_id)})
+            return result.deleted_count
         except Exception as e:
-            raise ValueError(f"Error fetching stock value for '{stock.symbol}': {str(e)}")
+            raise KeyError(f"Error deleting stock with id '{stock_id}': {e}")
+
+    def update_stock(self, stock_id: str, updated_data: dict) -> int:
+        """
+        Updates a stock's fields by its ID.
+        Returns: The number of documents updated (0 or 1).
+        """
+        try:
+            result = self.stocks_collection.update_one(
+                {"_id": self.convert_to_object_id(stock_id)},
+                {"$set": updated_data}
+            )
+            return result.modified_count
+        except Exception as e:
+            raise KeyError(f"Stock with id '{stock_id}' not found. Ensure the ID is correct: {e}.")
 
     @staticmethod
     def fetch_stock_current_price(symbol: str, retries=3, delay=2) -> float:
@@ -102,6 +87,24 @@ class StockService:
                     time.sleep(delay)
                 else:
                     raise ValueError(f"API request failed after {retries} attempts: {str(e)}")
+
+    def get_stock_value(self, stock_id: str) -> dict:
+        try:
+            stock = self.get_stock_by_id(stock_id)
+        except KeyError:
+            raise KeyError(f"Stock with ID '{stock_id}' not found.")
+        try:
+            current_price = round(self.fetch_stock_current_price(stock.symbol), 2)
+            stock_value = round(stock.shares * current_price, 2)
+
+            # Return the required data as a dictionary
+            return {
+                "symbol": stock.symbol,
+                "ticker": current_price,
+                "stock value": stock_value
+            }
+        except Exception as e:
+            raise ValueError(f"Error fetching stock value for '{stock.symbol}': {str(e)}")
 
     def get_stocks(self) -> list[dict[str, any]]:
         """
@@ -132,3 +135,10 @@ class StockService:
 
     def stock_id_exists(self, stock_id: str) -> bool:
         return stock_id in self.portfolio
+
+    @staticmethod
+    def convert_to_object_id(stock_id: str) -> ObjectId:
+        try:
+            return ObjectId(stock_id)
+        except Exception:
+            raise ValueError(f"Invalid stock ID format: '{stock_id}'")

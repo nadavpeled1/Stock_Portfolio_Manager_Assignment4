@@ -139,7 +139,7 @@ class StockController:
 
     def remove_stock(self, stock_id):
         try:
-            self.stock_service.remove_stock(stock_id)
+            self.stock_service.delete_stock(stock_id)
             return '', 204
         except KeyError:
             logging.error(f"DELETE request error: Stock with id '{stock_id}' not found.")
