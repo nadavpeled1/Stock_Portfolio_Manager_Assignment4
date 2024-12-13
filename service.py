@@ -2,7 +2,6 @@ import time
 import requests
 from requests import RequestException
 from bson import ObjectId
-from stock import Stock
 
 NINJA_API_KEY = "t7kGKURsW31xlUX9jhmX6Q==JKxHUYND1othy0fC"
 API_URL = 'https://api.api-ninjas.com/v1/stockprice?ticker={}'
