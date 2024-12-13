@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime
 from flask import Flask, request, jsonify
 from service import StockService
@@ -21,6 +22,7 @@ class StockController:
         self.app.route('/stocks/<string:stock_id>', methods=['PUT'])(self.update_stock)
         self.app.route('/stock-value/<string:stock_id>', methods=['GET'])(self.stock_value)
         self.app.route('/portfolio-value', methods=['GET'])(self.portfolio_value)
+        self.app.route('/kill', methods=['GET'])(self.kill_container)
 
     def validate_stock_data(self, data, required_fields):
         for field in required_fields:
@@ -235,3 +237,7 @@ class StockController:
         except Exception as e:
             logging.error(f"Error calculating portfolio value: {str(e)}")
             return jsonify({"server error": str(e)}), 500
+
+    @staticmethod
+    def kill_container():
+        os._exit(1)
