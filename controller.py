@@ -99,7 +99,7 @@ class StockController:
 
             # note: id is generated in the service layer
             stock = self.stock_service.add_stock(symbol, purchase_price, shares, name, purchase_date)
-            return jsonify({'id': stock.id}), 201
+            return jsonify({'id': str(stock['_id'])}), 201
         except Exception as e:
             return jsonify({'server error': str(e)}), 500
 
@@ -115,11 +115,7 @@ class StockController:
 
             # Apply filters if query parameters exist
             if query_params:
-                stocks = [
-                    stock for stock in stocks
-                    if all(str(stock.get(key, "")).lower() == str(value).lower()
-                           for key, value in query_params.items() if key in stock)
-                ]
+                stocks = list(self.stock_service.stocks_collection.find(query_params))
 
             return jsonify(stocks), 200
 
@@ -130,7 +126,7 @@ class StockController:
     def get_stock(self, stock_id):
         try:
             stock = self.stock_service.get_stock_by_id(stock_id)
-            return jsonify(stock.__dict__), 200
+            return jsonify(stock), 200
         except KeyError:
             logging.error(f"DELETE request error: Stock with id '{stock_id}' not found.")
             return jsonify({"error": "Not found"}), 404
@@ -203,7 +199,7 @@ class StockController:
 
         except ValueError as e:
             stock = self.stock_service.get_stock_by_id(stock_id)
-            stock_symbol = stock.symbol if stock else "Unknown"
+            stock_symbol = stock["symbol"] if stock else "Unknown"
 
             logging.error(f"Invalid stock symbol '{stock_symbol}' (ID: {stock_id}): {str(e)}")
             return jsonify({
