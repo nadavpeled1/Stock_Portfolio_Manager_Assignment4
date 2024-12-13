@@ -1,6 +1,7 @@
 import time
 import requests
 from requests import RequestException
+from bson import ObjectId
 from stock import Stock
 
 NINJA_API_KEY = "t7kGKURsW31xlUX9jhmX6Q==JKxHUYND1othy0fC"
@@ -8,30 +9,32 @@ API_URL = 'https://api.api-ninjas.com/v1/stockprice?ticker={}'
 
 
 class StockService:
-    def __init__(self):
-        # dict since we need to support CRUD operations for specific stocks by id
-        self.portfolio = {}
-        self.nextid = 1
+    def __init__(self, stocks_collection):
+        self.stocks_collection = stocks_collection
 
     def add_stock(self, symbol: str, purchase_price: float, shares: int,
-                  name: str = 'NA', purchase_date: str = 'NA') -> Stock:
+                  name: str = 'NA', purchase_date: str = 'NA') -> dict:
         """
-        If the ‘name’ or ‘purchase date’ is not supplied for a stock on the POST
-        request, the JSON representation for those fields is the string ‘NA’ (Not
-        Available). E.g., that is what the server returns for those fields in a GET request.
-        The validity is checked in the controller layer.
-        """
-        stock_id = str(self.nextid)
-        self.nextid += 1
-        new_stock = Stock(stock_id, name, symbol, round(purchase_price, 2), purchase_date, shares)
-        self.portfolio[stock_id] = new_stock
-        return new_stock
+         Inserts a new stock into the MongoDB collection.
+         """
+        new_stock = {
+            "name": name,
+            "symbol": symbol,
+            "purchase_price": round(purchase_price, 2),
+            "purchase_date": purchase_date,
+            "shares": shares
+        }
+        result = self.stocks_collection.insert_one(new_stock)
+        return self.stocks_collection.find_one({"_id": result.inserted_id})
 
-    def get_stock_by_id(self, stock_id: str) -> Stock:
-        if stock_id in self.portfolio:
-            return self.portfolio[stock_id]
-        else:
-            raise KeyError(f"Stock with id '{stock_id}' not found in the portfolio.")
+    def get_stock_by_id(self, stock_id: str) -> dict:
+        try:
+            stock = self.stocks_collection.find_one({"_id": ObjectId(stock_id)})
+            if not stock:
+                raise KeyError(f"Stock with id '{stock_id}' not found in the portfolio.")
+            return stock
+        except Exception as e:
+            raise KeyError(f"Error finding stock with id '{stock_id}': {e}")
 
     def remove_stock(self, stock_id: str) -> None:
         if stock_id in self.portfolio:
