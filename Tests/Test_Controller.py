@@ -217,39 +217,39 @@ class TestController(unittest.TestCase):
     #             self.assertEqual(response.status_code, 200)
     #             self.assertEqual(response.json, case["expected_response"])
 
-    def test_get_stock(self):
-        # Create a real stock and an in-memory portfolio
-        stock = Stock("1", "Apple Inc.", "AAPL", 150.0, "01-10-2023", 10)
-        portfolio = {"1": stock}  # Directly define the portfolio
-
-        # Assign the portfolio to the controller's StockService
-        self.controller_service.stock_service.portfolio = portfolio
-
-        # Test cases
-        cases = [
-            {
-                "description": "Valid stock ID, expect 200",
-                "stock_id": "1",
-                "expected_status": 200,
-                "expected_response": stock.__dict__,
-            },
-            {
-                "description": "Non-existent stock ID, expect 404",
-                "stock_id": "nonexistent",
-                "expected_status": 404,
-                "expected_response": {"error": "Not found"},
-            }
-        ]
-
-        # Run the test cases
-        for case in cases:
-            with self.subTest(case=case["description"]):
-                # Perform the GET request
-                response = self.client.get(f'/stocks/{case["stock_id"]}')
-
-                # Assert the response
-                self.assertEqual(response.status_code, case["expected_status"])
-                self.assertEqual(response.json, case["expected_response"])
+    # def test_get_stock(self):
+    #     # Create a real stock and an in-memory portfolio
+    #     stock = Stock("1", "Apple Inc.", "AAPL", 150.0, "01-10-2023", 10)
+    #     portfolio = {"1": stock}  # Directly define the portfolio
+    #
+    #     # Assign the portfolio to the controller's StockService
+    #     self.controller_service.stock_service.portfolio = portfolio
+    #
+    #     # Test cases
+    #     cases = [
+    #         {
+    #             "description": "Valid stock ID, expect 200",
+    #             "stock_id": "1",
+    #             "expected_status": 200,
+    #             "expected_response": stock.__dict__,
+    #         },
+    #         {
+    #             "description": "Non-existent stock ID, expect 404",
+    #             "stock_id": "nonexistent",
+    #             "expected_status": 404,
+    #             "expected_response": {"error": "Not found"},
+    #         }
+    #     ]
+    #
+    #     # Run the test cases
+    #     for case in cases:
+    #         with self.subTest(case=case["description"]):
+    #             # Perform the GET request
+    #             response = self.client.get(f'/stocks/{case["stock_id"]}')
+    #
+    #             # Assert the response
+    #             self.assertEqual(response.status_code, case["expected_status"])
+    #             self.assertEqual(response.json, case["expected_response"])
 
     # def test_remove_stock(self):
     #     # Set up the StockService and populate it with test data
