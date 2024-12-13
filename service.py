@@ -94,17 +94,17 @@ class StockService:
         except KeyError:
             raise KeyError(f"Stock with ID '{stock_id}' not found.")
         try:
-            current_price = round(self.fetch_stock_current_price(stock.symbol), 2)
-            stock_value = round(stock.shares * current_price, 2)
+            current_price = round(self.fetch_stock_current_price(stock['symbol']), 2)
+            stock_value = round(stock['shares'] * current_price, 2)
 
             # Return the required data as a dictionary
             return {
-                "symbol": stock.symbol,
+                "symbol": stock['symbol'],
                 "ticker": current_price,
                 "stock value": stock_value
             }
         except Exception as e:
-            raise ValueError(f"Error fetching stock value for '{stock.symbol}': {str(e)}")
+            raise ValueError(f"Error fetching stock value for '{stock['symbol']}': {str(e)}")
 
     def get_stocks(self) -> list[dict[str, any]]:
         """
@@ -119,13 +119,14 @@ class StockService:
     def get_portfolio_value(self) -> float:
         total_value = 0.0
         try:
-            for stock in self.portfolio.values():
-                current_price = self.fetch_stock_current_price(stock.symbol)
+            for stock in self.stocks_collection.find():
+                current_price = self.fetch_stock_current_price(stock['symbol'])
                 if current_price:
-                    total_value += stock.shares * current_price
+                    total_value += stock['shares'] * current_price
                 else:
-                    raise ValueError(f"Price for stock '{stock.symbol}' (id: {stock.id}) "
+                    raise ValueError(f"Price for stock '{stock['symbol']}' (id: {stock['_id']}) "
                                      f"is not available. Please update the symbol.")
+
             return round(total_value, 2)
         except Exception as e:
             raise ValueError(f"Error calculating portfolio value: {str(e)}")
