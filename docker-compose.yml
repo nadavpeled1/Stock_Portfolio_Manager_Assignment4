@@ -1,23 +1,52 @@
 version: '3.9'
 
 services:
-  stock_portfolio:
-    build: ./
-    ports:
-      - "80:5001"
-    environment:
-      - MONGO_URI=mongodb://mongodb:27017/
-    depends_on:
-      - mongodb
-    restart: always
-
   mongodb:
     image: mongo:latest
+    container_name: mongodb-container
     ports:
       - "27017:27017"
     volumes:
-      - mongo_data:/data/db
-    restart: always
+      - mongo-data:/data/db
+
+  stock_service_1:
+    build:
+      context: .  # Separate context for stock_service
+    container_name: stock_service-container-1
+    ports:
+      - "5001:8000"  # Host: 5001 -> Container: 8000
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/stock_portfolio
+      - MONGO_COLLECTION=stock_portfolio_2
+      - FLASK_PORT=8000  # Internal port Flask listens to
+    depends_on:
+      - mongodb
+
+  stock_service_2:
+    build:
+      context: .  # Same build context as stock_service_1
+    container_name: stock_service-container-2
+    ports:
+      - "5002:8000"  # Host: 5002 -> Container: 8000
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/stock_portfolio
+      - MONGO_COLLECTION=stock_portfolio_2
+      - FLASK_PORT=8000
+    depends_on:
+      - mongodb
+
+#  capgain_service:
+#    build:
+#      context: ./capgain_service  # Separate context for capgain_service
+#    container_name: capgain_service-container
+#    ports:
+#      - "5003:8080"  # Host: 5003 -> Container: 8080
+#    environment:
+#      - MONGODB_URI=mongodb://mongodb:27017/stock_portfolio
+#      - SERVICE_TYPE=capGain
+#      - FLASK_PORT=8080  # Internal port Flask listens to
+#    depends_on:
+#      - mongodb
 
 volumes:
-  mongo_data:
+  mongo-data:
