@@ -1,13 +1,14 @@
 import logging
+import os
 from datetime import datetime
 from flask import Flask, request, jsonify
 from service import StockService
 
 
 class StockController:
-    def __init__(self):
+    def __init__(self, stocks_collection):
         self.app = Flask(__name__)
-        self.stock_service = StockService()
+        self.stock_service = StockService(stocks_collection)
         self.setup_routes()
 
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -21,9 +22,9 @@ class StockController:
         self.app.route('/stocks/<string:stock_id>', methods=['PUT'])(self.update_stock)
         self.app.route('/stock-value/<string:stock_id>', methods=['GET'])(self.stock_value)
         self.app.route('/portfolio-value', methods=['GET'])(self.portfolio_value)
+        self.app.route('/kill', methods=['GET'])(self.kill_container)
 
-    def validate_stock_data(self, data):
-        required_fields = ['symbol', 'purchase_price', 'shares']
+    def validate_stock_data(self, data, required_fields):
         for field in required_fields:
             # Check if the field exists and is not empty
             if field not in data or not str(data[field]).strip():
@@ -89,7 +90,7 @@ class StockController:
                 return jsonify({'error': 'Expected application/json media type'}), 415
             data = request.get_json()
 
-            if not self.validate_stock_data(data):
+            if not self.validate_stock_data(data, ['symbol', 'purchase_price', 'shares']):
                 return jsonify({'error': 'Malformed data'}), 400
 
             name = data.get('name', 'NA')
@@ -100,7 +101,7 @@ class StockController:
 
             # note: id is generated in the service layer
             stock = self.stock_service.add_stock(symbol, purchase_price, shares, name, purchase_date)
-            return jsonify({'id': stock.id}), 201
+            return jsonify({'id': str(stock['_id'])}), 201
         except Exception as e:
             return jsonify({'server error': str(e)}), 500
 
@@ -116,11 +117,7 @@ class StockController:
 
             # Apply filters if query parameters exist
             if query_params:
-                stocks = [
-                    stock for stock in stocks
-                    if all(str(stock.get(key, "")).lower() == str(value).lower()
-                           for key, value in query_params.items() if key in stock)
-                ]
+                stocks = list(self.stock_service.stocks_collection.find(query_params))
 
             return jsonify(stocks), 200
 
@@ -131,7 +128,7 @@ class StockController:
     def get_stock(self, stock_id):
         try:
             stock = self.stock_service.get_stock_by_id(stock_id)
-            return jsonify(stock.__dict__), 200
+            return jsonify(stock), 200
         except KeyError:
             logging.error(f"DELETE request error: Stock with id '{stock_id}' not found.")
             return jsonify({"error": "Not found"}), 404
@@ -140,7 +137,7 @@ class StockController:
 
     def remove_stock(self, stock_id):
         try:
-            self.stock_service.remove_stock(stock_id)
+            self.stock_service.delete_stock(stock_id)
             return '', 204
         except KeyError:
             logging.error(f"DELETE request error: Stock with id '{stock_id}' not found.")
@@ -156,23 +153,16 @@ class StockController:
                 return jsonify({"error": "Expected application/json media type"}), 415
 
             data = request.get_json()
-
-            # Required fields for the stock object
             required_fields = ['id', 'symbol', 'name', 'purchase_price', 'purchase_date', 'shares']
-            if not all(field in data for field in required_fields):
-                logging.error(f"Validation failed: Missing required fields in data.")
-                return jsonify({"error": "Malformed data"}), 400
+
+            if not self.validate_stock_data(data, required_fields):
+                return jsonify({'error': 'Malformed data'}), 400
 
             # Ensure the ID in the payload matches the stock_id in the URL
             if data['id'] != stock_id:
                 logging.error(
                     f"Validation failed: Stock ID in URL '{stock_id}' does not match ID in payload '{data['id']}'.")
                 return jsonify({"error": "ID mismatch"}), 400
-
-            is_valid_price = self.validate_purchase_price(data['purchase_price'])
-            is_valid_shares = self.validate_number_of_shares(data['shares'])
-            if not (is_valid_price and is_valid_shares):
-                return jsonify({"error": "Invalid data"}), 400
 
             # Update stock in the service layer
             self.stock_service.update_stock(
@@ -208,6 +198,17 @@ class StockController:
         except KeyError:
             logging.error(f"Stock with ID '{stock_id}' not found.")
             return jsonify({"error": "Not found"}), 404
+
+        except ValueError as e:
+            stock = self.stock_service.get_stock_by_id(stock_id)
+            stock_symbol = stock["symbol"] if stock else "Unknown"
+
+            logging.error(f"Invalid stock symbol '{stock_symbol}' (ID: {stock_id}): {str(e)}")
+            return jsonify({
+                "error": f"Stock is not found: {stock_symbol} (ID: {stock_id})",
+                "suggestion": f"Please update the symbol for stock ID '{stock_id}' to a valid ticker."
+            }), 404
+
         except Exception as e:
             logging.error(f"Error in stock_value: {str(e)}")
             return jsonify({"server error": str(e)}), 500
@@ -225,6 +226,18 @@ class StockController:
             }
             return jsonify(response), 200
 
+        except ValueError as e:
+            # Log the invalid stock symbol error, but return a server error
+            logging.error(f"Invalid stock symbol in portfolio: {str(e)}")
+            return jsonify({
+                "error": "Invalid stock symbol encountered in portfolio.",
+                "suggestion": str(e)
+            }), 500
+
         except Exception as e:
             logging.error(f"Error calculating portfolio value: {str(e)}")
             return jsonify({"server error": str(e)}), 500
+
+    @staticmethod
+    def kill_container():
+        os._exit(1)
