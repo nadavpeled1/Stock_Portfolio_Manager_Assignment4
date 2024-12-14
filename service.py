@@ -31,6 +31,7 @@ class StockService:
             stock = self.stocks_collection.find_one({"_id": self.convert_to_object_id(stock_id)})
             if not stock:
                 raise KeyError(f"Stock with id '{stock_id}' not found in the portfolio.")
+            stock['_id'] = str(stock['_id'])
             return stock
         except Exception as e:
             raise KeyError(f"Stock with id '{stock_id}' not found. Ensure the ID is correct: {e}.")
