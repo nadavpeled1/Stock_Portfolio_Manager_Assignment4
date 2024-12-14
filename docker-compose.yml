@@ -16,8 +16,8 @@ services:
     ports:
       - "5001:8000"  # Host: 5001 -> Container: 8000
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/stock_portfolio
-      - MONGO_COLLECTION=stock_portfolio_2
+#      - MONGODB_URI=mongodb://mongodb:27017/
+      - MONGO_COLLECTION=stock_portfolio_1
       - FLASK_PORT=8000  # Internal port Flask listens to
     depends_on:
       - mongodb
@@ -29,7 +29,7 @@ services:
     ports:
       - "5002:8000"  # Host: 5002 -> Container: 8000
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/stock_portfolio
+#      - MONGODB_URI=mongodb://mongodb:27017/
       - MONGO_COLLECTION=stock_portfolio_2
       - FLASK_PORT=8000
     depends_on:
