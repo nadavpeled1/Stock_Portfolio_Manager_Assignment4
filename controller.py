@@ -133,6 +133,7 @@ class StockController:
     def get_stock(self, stock_id):
         try:
             stock = self.stock_service.get_stock_by_id(stock_id)
+            stock['_id'] = str(stock['_id'])
             return jsonify(stock), 200
         except KeyError:
             logging.error(f"DELETE request error: Stock with id '{stock_id}' not found.")
