@@ -165,7 +165,7 @@ class StockController:
                 return jsonify({'error': 'Malformed data'}), 400
 
             # Ensure the ID in the payload matches the stock_id in the URL
-            if data['id'] != stock_id:
+            if data['_id'] != stock_id:
                 logging.error(
                     f"Validation failed: Stock ID in URL '{stock_id}' does not match ID in payload '{data['id']}'.")
                 return jsonify({"error": "ID mismatch"}), 400
