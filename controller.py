@@ -101,7 +101,8 @@ class StockController:
 
             # note: id is generated in the service layer
             stock = self.stock_service.add_stock(symbol, purchase_price, shares, name, purchase_date)
-            return jsonify({'id': str(stock['_id'])}), 201
+            stock['_id'] = str(stock['_id'])  # Convert ObjectId to string
+            return jsonify(stock), 201
         except Exception as e:
             return jsonify({'server error': str(e)}), 500
 
