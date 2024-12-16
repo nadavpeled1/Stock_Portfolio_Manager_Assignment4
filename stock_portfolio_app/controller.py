@@ -159,7 +159,7 @@ class StockController:
                 return jsonify({"error": "Expected application/json media type"}), 415
 
             data = request.get_json()
-            required_fields = ['id', 'symbol', 'name', 'purchase_price', 'purchase_date', 'shares']
+            required_fields = ['_id', 'symbol', 'name', 'purchase_price', 'purchase_date', 'shares']
 
             if not self.validate_stock_data(data, required_fields):
                 return jsonify({'error': 'Malformed data'}), 400
