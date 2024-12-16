@@ -120,6 +120,10 @@ class StockController:
             if query_params:
                 stocks = list(self.stock_service.stocks_collection.find(query_params))
 
+            # Convert ObjectId to string for JSON serialization
+            for stock in stocks:
+                stock['_id'] = str(stock['_id'])
+
             return jsonify(stocks), 200
 
         except Exception as e:
