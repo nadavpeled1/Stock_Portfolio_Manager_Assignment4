@@ -24,14 +24,14 @@ class StockController:
         self.app.route('/portfolio-value', methods=['GET'])(self.portfolio_value)
         self.app.route('/kill', methods=['GET'])(self.kill_container)
 
-    def validate_stock_data(self, data, required_fields):
+    def validate_stock_data(self, data, required_fields, check_symbol_exists):
         for field in required_fields:
             # Check if the field exists and is not empty
             if field not in data or not str(data[field]).strip():
                 logging.error(f"Validation failed: '{field}' is missing or empty.")
                 return False
 
-        if self.stock_service.symbol_exists(data['symbol']):
+        if check_symbol_exists and self.stock_service.symbol_exists(data['symbol']):
             logging.error(f"Validation failed: Stock with symbol '{data['symbol']}' already exists.")
             return False
 
@@ -90,7 +90,7 @@ class StockController:
                 return jsonify({'error': 'Expected application/json media type'}), 415
             data = request.get_json()
 
-            if not self.validate_stock_data(data, ['symbol', 'purchase_price', 'shares']):
+            if not self.validate_stock_data(data, ['symbol', 'purchase_price', 'shares'], check_symbol_exists=True):
                 return jsonify({'error': 'Malformed data'}), 400
 
             name = data.get('name', 'NA')
@@ -161,7 +161,7 @@ class StockController:
             data = request.get_json()
             required_fields = ['_id', 'symbol', 'name', 'purchase_price', 'purchase_date', 'shares']
 
-            if not self.validate_stock_data(data, required_fields):
+            if not self.validate_stock_data(data, required_fields, check_symbol_exists=False):
                 return jsonify({'error': 'Malformed data'}), 400
 
             # Ensure the ID in the payload matches the stock_id in the URL
@@ -183,7 +183,7 @@ class StockController:
             )
 
             # Prepare and return the response
-            response_data = {"id": stock_id}
+            response_data = {"_id": stock_id}
             return jsonify(response_data), 200
 
         except KeyError:
