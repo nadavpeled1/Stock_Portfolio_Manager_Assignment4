@@ -24,14 +24,14 @@ class StockController:
         self.app.route('/portfolio-value', methods=['GET'])(self.portfolio_value)
         self.app.route('/kill', methods=['GET'])(self.kill_container)
 
-    def validate_stock_data(self, data, required_fields):
+    def validate_stock_data(self, data, required_fields, check_symbol_exists):
         for field in required_fields:
             # Check if the field exists and is not empty
             if field not in data or not str(data[field]).strip():
                 logging.error(f"Validation failed: '{field}' is missing or empty.")
                 return False
 
-        if self.stock_service.symbol_exists(data['symbol']):
+        if check_symbol_exists and self.stock_service.symbol_exists(data['symbol']):
             logging.error(f"Validation failed: Stock with symbol '{data['symbol']}' already exists.")
             return False
 
@@ -90,7 +90,7 @@ class StockController:
                 return jsonify({'error': 'Expected application/json media type'}), 415
             data = request.get_json()
 
-            if not self.validate_stock_data(data, ['symbol', 'purchase_price', 'shares']):
+            if not self.validate_stock_data(data, ['symbol', 'purchase_price', 'shares'], check_symbol_exists=True):
                 return jsonify({'error': 'Malformed data'}), 400
 
             name = data.get('name', 'NA')
@@ -101,7 +101,8 @@ class StockController:
 
             # note: id is generated in the service layer
             stock = self.stock_service.add_stock(symbol, purchase_price, shares, name, purchase_date)
-            return jsonify({'id': str(stock['_id'])}), 201
+            stock['_id'] = str(stock['_id'])  # Convert ObjectId to string
+            return jsonify(stock), 201
         except Exception as e:
             return jsonify({'server error': str(e)}), 500
 
@@ -119,6 +120,10 @@ class StockController:
             if query_params:
                 stocks = list(self.stock_service.stocks_collection.find(query_params))
 
+            # Convert ObjectId to string for JSON serialization
+            for stock in stocks:
+                stock['_id'] = str(stock['_id'])
+
             return jsonify(stocks), 200
 
         except Exception as e:
@@ -128,6 +133,7 @@ class StockController:
     def get_stock(self, stock_id):
         try:
             stock = self.stock_service.get_stock_by_id(stock_id)
+            stock['_id'] = str(stock['_id'])
             return jsonify(stock), 200
         except KeyError:
             logging.error(f"DELETE request error: Stock with id '{stock_id}' not found.")
@@ -153,13 +159,13 @@ class StockController:
                 return jsonify({"error": "Expected application/json media type"}), 415
 
             data = request.get_json()
-            required_fields = ['id', 'symbol', 'name', 'purchase_price', 'purchase_date', 'shares']
+            required_fields = ['_id', 'symbol', 'name', 'purchase_price', 'purchase_date', 'shares']
 
-            if not self.validate_stock_data(data, required_fields):
+            if not self.validate_stock_data(data, required_fields, check_symbol_exists=False):
                 return jsonify({'error': 'Malformed data'}), 400
 
             # Ensure the ID in the payload matches the stock_id in the URL
-            if data['id'] != stock_id:
+            if data['_id'] != stock_id:
                 logging.error(
                     f"Validation failed: Stock ID in URL '{stock_id}' does not match ID in payload '{data['id']}'.")
                 return jsonify({"error": "ID mismatch"}), 400
@@ -177,7 +183,7 @@ class StockController:
             )
 
             # Prepare and return the response
-            response_data = {"id": stock_id}
+            response_data = {"_id": stock_id}
             return jsonify(response_data), 200
 
         except KeyError:

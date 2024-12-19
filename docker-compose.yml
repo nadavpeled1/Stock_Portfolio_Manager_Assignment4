@@ -12,7 +12,7 @@ services:
 
   stock_service_1:
     build:
-      context: .  # Separate context for stock_service
+      context: ./stock_portfolio_app/
     container_name: stock_service-container-1
     ports:
       - "5001:8000"  # Host: 5001 -> Container: 8000
@@ -26,7 +26,7 @@ services:
 
   stock_service_2:
     build:
-      context: .  # Same build context as stock_service_1
+      context: ./stock_portfolio_app/
     container_name: stock_service-container-2
     ports:
       - "5002:8000"  # Host: 5002 -> Container: 8000
