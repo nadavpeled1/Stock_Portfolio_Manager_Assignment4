@@ -23,18 +23,8 @@ STOCK_SERVICE_1_VALUE_URL = f"http://stock_service-container-1:{STOCK_SERVICE_1_
 STOCK_SERVICE_2_VALUE_URL = f"http://stock_service-container-2:{STOCK_SERVICE_2_PORT}/stock-value"
 
 
-@app.route('/capital-gains', methods=['GET'])
-def get_capital_gains():
-    logging.info("Received a request for capital gains")
-
-    # Query parameters
-    portfolio = request.args.get('portfolio')
-    numSharesGt = request.args.get('numSharesGt', type=int)
-    numSharesLt = request.args.get('numSharesLt', type=int)
-    logging.info(f"Query parameters - portfolio: {portfolio}, numSharesGt: {numSharesGt}, numSharesLt: {numSharesLt}")
-
-
-    # Fetch data from stock services
+def _fetch_stock_data(portfolio):
+    """Fetch stock data from the appropriate service."""
     stock_data = []
     try:
         if not portfolio or portfolio == "stocks1":
@@ -45,42 +35,70 @@ def get_capital_gains():
             stock_data += requests.get(STOCK_SERVICE_2_URL).json()
     except requests.RequestException as e:
         logging.error(f"Error fetching data from stock services: {e}")
-        return jsonify({"error": f"Failed to fetch data from stock services: {str(e)}"}), 500
+        raise
+    return stock_data
 
-    logging.info(f"Fetched stock data: {stock_data}")
 
-    # Filter stocks
-    filtered_stocks = [
+def _filter_stocks(stock_data, numSharesGt, numSharesLt):
+    """Filter stocks based on query parameters."""
+    return [
         stock for stock in stock_data
         if '_id' in stock and 'shares' in stock and 'purchase_price' in stock and
            (numSharesGt is None or stock['shares'] > numSharesGt) and
            (numSharesLt is None or stock['shares'] < numSharesLt)
     ]
-    logging.info(f"Filtered stock data: {filtered_stocks}")
 
-    # Fetch current prices and calculate capital gains
+
+def _fetch_current_price(stock, portfolio):
+    """Fetch the current price for a specific stock."""
+    stock_value_url = (
+        f"{STOCK_SERVICE_1_VALUE_URL}/{stock['_id']}"
+        if portfolio == "stocks1" or stock.get('portfolio') == "stocks1"
+        else f"{STOCK_SERVICE_2_VALUE_URL}/{stock['_id']}"
+    )
+    try:
+        logging.info(f"Fetching current value for stock ID {stock['_id']} from {stock_value_url}")
+        response = requests.get(stock_value_url).json()
+        return response.get("current_price", 0)
+    except requests.RequestException as e:
+        logging.error(f"Error fetching current value for stock ID {stock['_id']}: {e}")
+        return 0
+
+
+def _calculate_capital_gains(filtered_stocks, portfolio):
+    """Calculate total capital gains for filtered stocks."""
     capital_gains = 0
     for stock in filtered_stocks:
-        try:
-            # Determine the correct stock service for the stock
-            stock_value_url = (
-                f"{STOCK_SERVICE_1_VALUE_URL}/{stock['id']}"
-                if portfolio == "stocks1" or stock['portfolio'] == "stocks1"
-                else f"{STOCK_SERVICE_2_VALUE_URL}/{stock['id']}"
-            )
-            logging.info(f"Fetching current value for stock ID {stock['id']} from {stock_value_url}")
-            response = requests.get(stock_value_url).json()
-            current_price = response.get("current_price", 0)
+        current_price = _fetch_current_price(stock, portfolio)
+        capital_gains += (current_price - stock['purchase_price']) * stock['shares']
+    return capital_gains
 
-            # Calculate the gain for this stock
-            capital_gains += (current_price - stock['purchase_price']) * stock['shares']
-        except requests.RequestException as e:
-            logging.error(f"Error fetching current value for stock ID {stock['id']}: {e}")
-            continue
 
-    logging.info(f"Calculated total capital gains: {capital_gains}")
+@app.route('/capital-gains', methods=['GET'])
+def get_capital_gains():
+    logging.info("Received a request for capital gains")
 
-    return jsonify({"capital_gains": capital_gains})
+    # Query parameters
+    portfolio = request.args.get('portfolio')
+    numSharesGt = request.args.get('numSharesGt', type=int)
+    numSharesLt = request.args.get('numSharesLt', type=int)
+    logging.info(f"Query parameters - portfolio: {portfolio}, numSharesGt: {numSharesGt}, numSharesLt: {numSharesLt}")
+
+    try:
+        # Fetch and process stock data
+        stock_data = _fetch_stock_data(portfolio)
+        logging.info(f"Fetched stock data: {stock_data}")
+
+        filtered_stocks = _filter_stocks(stock_data, numSharesGt, numSharesLt)
+        logging.info(f"Filtered stock data: {filtered_stocks}")
+
+        capital_gains = _calculate_capital_gains(filtered_stocks, portfolio)
+        logging.info(f"Calculated total capital gains: {capital_gains}")
+
+        return jsonify({"capital_gains": capital_gains})
+    except Exception as e:
+        logging.error(f"Error processing capital gains request: {e}")
+        return jsonify({"error": "Internal server error"}), 500
 
 
 if __name__ == '__main__':
