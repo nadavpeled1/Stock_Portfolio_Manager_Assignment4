@@ -19,15 +19,19 @@ def get_capital_gains():
 
     # Fetch data from stock services
     stock_data = []
-    if not portfolio or portfolio == "stocks1":
-        stock_data += requests.get(STOCK_SERVICE_1_URL).json()
-    if not portfolio or portfolio == "stocks2":
-        stock_data += requests.get(STOCK_SERVICE_2_URL).json()
+    try:
+        if not portfolio or portfolio == "stocks1":
+            stock_data += requests.get(STOCK_SERVICE_1_URL).json()
+        if not portfolio or portfolio == "stocks2":
+            stock_data += requests.get(STOCK_SERVICE_2_URL).json()
+    except requests.RequestException as e:
+        return jsonify({"error": f"Failed to fetch data from stock services: {str(e)}"}), 500
 
     # Filter stocks
     filtered_stocks = [
         stock for stock in stock_data
-        if (numSharesGt is None or stock['shares'] > numSharesGt) and
+        if 'shares' in stock and 'current_price' in stock and 'purchase_price' in stock and
+           (numSharesGt is None or stock['shares'] > numSharesGt) and
            (numSharesLt is None or stock['shares'] < numSharesLt)
     ]
 
@@ -40,5 +44,5 @@ def get_capital_gains():
 
 
 if __name__ == '__main__':
-    port = int(os.getenv("FLASK_PORT"))
+    port = int(os.getenv("FLASK_PORT", 8080))
     app.run(host='0.0.0.0', port=port)
