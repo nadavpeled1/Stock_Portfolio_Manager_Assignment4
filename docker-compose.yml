@@ -48,8 +48,8 @@ services:
       - "5003:8080"  # Host: 5003 -> Container: 8080
     environment:
       - FLASK_PORT=8080  # Internal port Flask listens to
-      - STOCK_SERVICE_1_URL=http://stock_service-container-1:8000/stocks
-      - STOCK_SERVICE_2_URL=http://stock_service-container-2:8000/stocks
+      - STOCK_SERVICE_1_PORT=8000
+      - STOCK_SERVICE_2_PORT=8000
     depends_on:
       - stock_service_1
       - stock_service_2
