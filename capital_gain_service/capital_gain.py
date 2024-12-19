@@ -14,8 +14,8 @@ STOCK_SERVICE_2_URL = os.getenv("STOCK_SERVICE_2_URL", "http://stock_service-con
 def get_capital_gains():
     # Query parameters
     portfolio = request.args.get('portfolio')
-    numsharesgt = request.args.get('numsharesgt', type=int)
-    numshareslt = request.args.get('numshareslt', type=int)
+    numSharesGt = request.args.get('numSharesGt', type=int)
+    numSharesLt = request.args.get('numSharesLt', type=int)
 
     # Fetch data from stock services
     stock_data = []
@@ -27,13 +27,15 @@ def get_capital_gains():
     # Filter stocks
     filtered_stocks = [
         stock for stock in stock_data
-        if (numsharesgt is None or stock['num_shares'] > numsharesgt) and
-           (numshareslt is None or stock['num_shares'] < numshareslt)
+        if (numSharesGt is None or stock['shares'] > numSharesGt) and
+           (numSharesLt is None or stock['shares'] < numSharesLt)
     ]
 
     # Calculate capital gains
     capital_gains = sum(
-        (stock['current_price'] - stock['purchase_price']) * stock['num_shares'] for stock in filtered_stocks)
+        (stock['current_price'] - stock['purchase_price']) * stock['shares']
+        for stock in filtered_stocks)
+
     return jsonify({"capital_gains": capital_gains})
 
 
