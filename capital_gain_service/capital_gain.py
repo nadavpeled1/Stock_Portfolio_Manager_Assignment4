@@ -15,12 +15,14 @@ logging.basicConfig(
 # Read stock service ports from environment variables
 STOCK_SERVICE_1_PORT = os.getenv("STOCK_SERVICE_1_PORT", "8000")
 STOCK_SERVICE_2_PORT = os.getenv("STOCK_SERVICE_2_PORT", "8000")
+STOCK_SERVICE_1_CONTAINER_NAME = os.getenv("STOCK_SERVICE_1_CONTAINER_NAME")
+STOCK_SERVICE_2_CONTAINER_NAME = os.getenv("STOCK_SERVICE_2_CONTAINER_NAME")
 
 # Dynamically construct URLs based on ports
-STOCK_SERVICE_1_URL = f"http://stock_service-container-1:{STOCK_SERVICE_1_PORT}/stocks"
-STOCK_SERVICE_2_URL = f"http://stock_service-container-2:{STOCK_SERVICE_2_PORT}/stocks"
-STOCK_SERVICE_1_VALUE_URL = f"http://stock_service-container-1:{STOCK_SERVICE_1_PORT}/stock-value"
-STOCK_SERVICE_2_VALUE_URL = f"http://stock_service-container-2:{STOCK_SERVICE_2_PORT}/stock-value"
+STOCK_SERVICE_1_URL = f"http://{STOCK_SERVICE_1_CONTAINER_NAME}:{STOCK_SERVICE_1_PORT}/stocks"
+STOCK_SERVICE_2_URL = f"http://{STOCK_SERVICE_2_CONTAINER_NAME}:{STOCK_SERVICE_2_PORT}/stocks"
+STOCK_SERVICE_1_VALUE_URL = f"http://{STOCK_SERVICE_1_CONTAINER_NAME}:{STOCK_SERVICE_1_PORT}/stock-value"
+STOCK_SERVICE_2_VALUE_URL = f"http://{STOCK_SERVICE_2_CONTAINER_NAME}:{STOCK_SERVICE_2_PORT}/stock-value"
 
 
 def _fetch_stock_data(portfolio):
