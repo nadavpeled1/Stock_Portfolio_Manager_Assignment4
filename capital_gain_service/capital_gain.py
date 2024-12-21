@@ -59,7 +59,7 @@ def _fetch_current_value(stock, portfolio):
     try:
         logging.info(f"Fetching current value for stock ID {stock['_id']} from {stock_value_url}")
         response = requests.get(stock_value_url).json()
-        return response.get("current_price", 0)
+        return response.get("stock_value", 0)
     except requests.RequestException as e:
         logging.error(f"Error fetching current value for stock ID {stock['_id']}: {e}")
         return 0
@@ -73,8 +73,8 @@ def _calculate_capital_gains(filtered_stocks, portfolio):
         stock_capital_gain = current_value - (stock['purchase_price'] * stock['shares'])
         logging.info(
             f"Capital gain for stock {stock['symbol']}: "
-            f"{current_value} - ({stock['purchase_price']} * {stock['shares']}) = {stock_capital_gain}"
-            f"current_value - (purchase_price * shares)"
+            f"{current_value} - ({stock['purchase_price']} * {stock['shares']}) = {stock_capital_gain}. "
+            f"Current_value - (purchase_price * shares)"
         )
         capital_gains += stock_capital_gain
     return capital_gains
