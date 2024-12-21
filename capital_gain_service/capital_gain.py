@@ -49,7 +49,7 @@ def _filter_stocks(stock_data, numSharesGt, numSharesLt):
     ]
 
 
-def _fetch_current_price(stock, portfolio):
+def _fetch_current_value(stock, portfolio):
     """Fetch the current price for a specific stock."""
     stock_value_url = (
         f"{STOCK_SERVICE_1_VALUE_URL}/{stock['_id']}"
@@ -69,8 +69,14 @@ def _calculate_capital_gains(filtered_stocks, portfolio):
     """Calculate total capital gains for filtered stocks."""
     capital_gains = 0
     for stock in filtered_stocks:
-        current_price = _fetch_current_price(stock, portfolio)
-        capital_gains += (current_price - stock['purchase_price']) * stock['shares']
+        current_value = _fetch_current_value(stock, portfolio)
+        stock_capital_gain = current_value - (stock['purchase_price'] * stock['shares'])
+        logging.info(
+            f"Capital gain for stock {stock['symbol']}: "
+            f"{current_value} - ({stock['purchase_price']} * {stock['shares']}) = {stock_capital_gain}"
+            f"current_value - (purchase_price * shares)"
+        )
+        capital_gains += stock_capital_gain
     return capital_gains
 
 
