@@ -73,7 +73,7 @@ services:
 
   reverse:
     build:
-        context: ./stock_portfolio_app/./NGINX/
+        context: ./NGINX/
     ports:
       - "80:80"
     depends_on:
