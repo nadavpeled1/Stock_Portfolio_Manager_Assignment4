@@ -25,18 +25,19 @@ STOCK_SERVICE_2_VALUE_URL = f"http://stock_service-container-2:{STOCK_SERVICE_2_
 
 def _fetch_stock_data(portfolio):
     """Fetch stock data from the appropriate service."""
-    stock_data = []
+    stock_data_1 = []
+    stock_data_2 = []
     try:
         if not portfolio or portfolio == "stocks1":
             logging.info(f"Fetching data from {STOCK_SERVICE_1_URL}")
-            stock_data += requests.get(STOCK_SERVICE_1_URL).json()
+            stock_data_1 += requests.get(STOCK_SERVICE_1_URL).json()
         if not portfolio or portfolio == "stocks2":
             logging.info(f"Fetching data from {STOCK_SERVICE_2_URL}")
-            stock_data += requests.get(STOCK_SERVICE_2_URL).json()
+            stock_data_2 += requests.get(STOCK_SERVICE_2_URL).json()
     except requests.RequestException as e:
         logging.error(f"Error fetching data from stock services: {e}")
         raise
-    return stock_data
+    return stock_data_1, stock_data_2
 
 
 def _filter_stocks(stock_data, numSharesGt, numSharesLt):
@@ -49,11 +50,11 @@ def _filter_stocks(stock_data, numSharesGt, numSharesLt):
     ]
 
 
-def _fetch_current_value(stock, portfolio):
-    """Fetch the current price for a specific stock."""
+def _fetch_current_value(stock):
+    """Fetch the current price for a specific stock based on its portfolio."""
     stock_value_url = (
         f"{STOCK_SERVICE_1_VALUE_URL}/{stock['_id']}"
-        if portfolio == "stocks1" or stock.get('portfolio') == "stocks1"
+        if stock.get('portfolio') == "stocks1"
         else f"{STOCK_SERVICE_2_VALUE_URL}/{stock['_id']}"
     )
     try:
@@ -65,11 +66,11 @@ def _fetch_current_value(stock, portfolio):
         return 0
 
 
-def _calculate_capital_gains(filtered_stocks, portfolio):
+def _calculate_capital_gains(filtered_stocks):
     """Calculate total capital gains for filtered stocks."""
     capital_gains = 0
     for stock in filtered_stocks:
-        current_value = _fetch_current_value(stock, portfolio)
+        current_value = _fetch_current_value(stock)
         stock_capital_gain = current_value - (stock['purchase_price'] * stock['shares'])
         logging.info(
             f"Capital gain for stock {stock['symbol']}: "
@@ -92,13 +93,21 @@ def get_capital_gains():
 
     try:
         # Fetch and process stock data
-        stock_data = _fetch_stock_data(portfolio)
-        logging.info(f"Fetched stock data: {stock_data}")
+        stock_data_1, stock_data_2 = _fetch_stock_data(portfolio)
+        logging.info(f"Fetched stock data from portfolio 1: {stock_data_1}.")
+        logging.info(f"Fetched stock data from portfolio 2: {stock_data_2}.")
+
+        # Add portfolio information
+        for stock in stock_data_1: stock['portfolio'] = "stocks1"
+        for stock in stock_data_2: stock['portfolio'] = "stocks2"
+
+        # Combine stock data into one list
+        stock_data = stock_data_1 + stock_data_2
 
         filtered_stocks = _filter_stocks(stock_data, numSharesGt, numSharesLt)
         logging.info(f"Filtered stock data: {filtered_stocks}")
 
-        capital_gains = _calculate_capital_gains(filtered_stocks, portfolio)
+        capital_gains = _calculate_capital_gains(filtered_stocks)
         logging.info(f"Calculated total capital gains: {capital_gains}")
 
         return jsonify({"capital_gains": capital_gains})
