@@ -87,8 +87,8 @@ def get_capital_gains():
 
     # Query parameters
     portfolio = request.args.get('portfolio')
-    numSharesGt = request.args.get('numSharesGt', type=int)
-    numSharesLt = request.args.get('numSharesLt', type=int)
+    numSharesGt = request.args.get('numsharesgt', type=int)
+    numSharesLt = request.args.get('numshareslt', type=int)
     logging.info(f"Query parameters - portfolio: {portfolio}, numSharesGt: {numSharesGt}, numSharesLt: {numSharesLt}")
 
     try:
