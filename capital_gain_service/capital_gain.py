@@ -107,7 +107,7 @@ def get_capital_gains():
         filtered_stocks = _filter_stocks(stock_data, numSharesGt, numSharesLt)
         logging.info(f"Filtered stock data: {filtered_stocks}")
 
-        capital_gains = _calculate_capital_gains(filtered_stocks)
+        capital_gains = round(_calculate_capital_gains(filtered_stocks), 2)
         logging.info(f"Calculated total capital gains: {capital_gains}")
 
         return jsonify({"capital_gains": capital_gains})
