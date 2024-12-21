@@ -101,7 +101,7 @@ class StockService:
             return {
                 "symbol": stock['symbol'],
                 "ticker": current_price,
-                "stock value": stock_value
+                "stock_value": stock_value
             }
         except Exception as e:
             raise ValueError(f"Error fetching stock value for '{stock['symbol']}': {str(e)}")
