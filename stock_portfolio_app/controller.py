@@ -176,8 +176,8 @@ class StockController:
                 {
                     'symbol': data['symbol'],
                     'name': data['name'],
-                    'purchase_price': float(data['purchase price']),
-                    'purchase_date': data['purchase date'],
+                    'purchase price': float(data['purchase price']),
+                    'purchase date': data['purchase date'],
                     'shares': int(data['shares'])
                 }
             )
