@@ -1,3 +1,4 @@
+import logging
 import time
 import requests
 from requests import RequestException
@@ -108,12 +109,22 @@ class StockService:
         except Exception as e:
             raise ValueError(f"Error fetching stock value for '{stock['symbol']}': {str(e)}")
 
-    def get_stocks(self) -> list[dict]:
+    def get_stocks(self, query_params) -> list[dict]:
         """
         Retrieves all stocks from the database.
         Returns: A list of stock objects represented as dictionaries.
         """
-        return list(self.stocks_collection.find())
+        # return list(self.stocks_collection.find())
+        try:
+            if query_params:
+                numeric_fields = ['purchase price', 'shares']  # Define numeric fields here
+                query_params = self.convert_query_params(query_params, numeric_fields)
+
+            return list(self.stocks_collection.find(query_params or {}))
+
+        except Exception as e:
+            logging.error(f"Error fetching stocks: {str(e)}")
+            raise
 
     def get_portfolio_value(self) -> float:
         total_value = 0.0
@@ -129,6 +140,21 @@ class StockService:
             return round(total_value, 2)
         except Exception as e:
             raise ValueError(f"Error calculating portfolio value: {str(e)}")
+
+    @staticmethod
+    def convert_query_params(query_params, numeric_fields):
+        """
+        Helper function to convert specific query parameters to numeric types.
+        """
+        for key, value in query_params.items():
+            if key in numeric_fields:
+                try:
+                    query_params[key] = float(value)  # Convert to float for numeric matching
+                except ValueError:
+                    # Log and ignore conversion errors, or handle as needed
+                    logging.warning(f"Failed to convert {key}='{value}' to a numeric value.")
+                    raise ValueError(f"Invalid value for field '{key}'. Expected a numeric value.")
+        return query_params
 
     def symbol_exists(self, symbol: str) -> bool:
         return self.stocks_collection.find_one({"symbol": symbol}) is not None

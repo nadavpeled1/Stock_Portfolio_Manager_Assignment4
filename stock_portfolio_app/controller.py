@@ -113,12 +113,8 @@ class StockController:
         For this assignment, you need to support query strings of the form <field>=<value>.
         """
         try:
-            stocks = self.stock_service.get_stocks()
             query_params = request.args.to_dict()
-
-            # Apply filters if query parameters exist
-            if query_params:
-                stocks = list(self.stock_service.stocks_collection.find(query_params))
+            stocks = self.stock_service.get_stocks(query_params)
 
             # Convert ObjectId to string for JSON serialization
             for stock in stocks:
