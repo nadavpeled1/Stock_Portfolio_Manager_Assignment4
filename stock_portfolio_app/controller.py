@@ -167,7 +167,7 @@ class StockController:
                 return jsonify({"error": "ID mismatch"}), 400
 
             # Update stock in the service layer
-            self.stock_service.update_stock(
+            update_result = self.stock_service.update_stock(
                 stock_id,
                 {
                     'symbol': data['symbol'],
@@ -178,13 +178,16 @@ class StockController:
                 }
             )
 
-            # Prepare and return the response
-            response_data = {"id": stock_id}
-            return jsonify(response_data), 200
+            if update_result == -1:
+                logging.error(f"PUT error: Stock with ID '{stock_id}' not found.")
+                return jsonify({"error": "Not found"}), 404
+            elif update_result == 0:
+                logging.info(f"No changes made for stock with ID '{stock_id}'.")
+                return jsonify({"message": "No changes made"}), 200  # Or use 204 No Content
+            else:
+                response_data = {"id": stock_id}
+                return jsonify(response_data), 200
 
-        except KeyError:
-            logging.error(f"PUT error: Stock with ID '{stock_id}' not found.")
-            return jsonify({"error": "Not found"}), 404
         except Exception as e:
             logging.error(f"Exception in update_stock: {str(e)}")
             return jsonify({"server error": str(e)}), 500
