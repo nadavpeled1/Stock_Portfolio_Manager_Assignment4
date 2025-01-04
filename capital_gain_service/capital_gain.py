@@ -46,7 +46,7 @@ def _filter_stocks(stock_data, numSharesGt, numSharesLt):
     """Filter stocks based on query parameters."""
     return [
         stock for stock in stock_data
-        if '_id' in stock and 'shares' in stock and 'purchase price' in stock and
+        if 'id' in stock and 'shares' in stock and 'purchase price' in stock and
            (numSharesGt is None or stock['shares'] > numSharesGt) and
            (numSharesLt is None or stock['shares'] < numSharesLt)
     ]
@@ -55,16 +55,16 @@ def _filter_stocks(stock_data, numSharesGt, numSharesLt):
 def _fetch_current_value(stock):
     """Fetch the current price for a specific stock based on its portfolio."""
     stock_value_url = (
-        f"{STOCK_SERVICE_1_VALUE_URL}/{stock['_id']}"
+        f"{STOCK_SERVICE_1_VALUE_URL}/{stock['id']}"
         if stock.get('portfolio') == "stocks1"
-        else f"{STOCK_SERVICE_2_VALUE_URL}/{stock['_id']}"
+        else f"{STOCK_SERVICE_2_VALUE_URL}/{stock['id']}"
     )
     try:
-        logging.info(f"Fetching current value for stock ID {stock['_id']} from {stock_value_url}")
+        logging.info(f"Fetching current value for stock ID {stock['id']} from {stock_value_url}")
         response = requests.get(stock_value_url).json()
         return response.get("stock_value", 0)
     except requests.RequestException as e:
-        logging.error(f"Error fetching current value for stock ID {stock['_id']}: {e}")
+        logging.error(f"Error fetching current value for stock ID {stock['id']}: {e}")
         return 0
 
 
