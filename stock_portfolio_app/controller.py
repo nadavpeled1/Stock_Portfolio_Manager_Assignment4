@@ -90,7 +90,7 @@ class StockController:
                 return jsonify({'error': 'Expected application/json media type'}), 415
             data = request.get_json()
 
-            if not self.validate_stock_data(data, ['symbol', 'purchase_price', 'shares'], check_symbol_exists=True):
+            if not self.validate_stock_data(data, ['symbol', 'purchase price', 'shares'], check_symbol_exists=True):
                 return jsonify({'error': 'Malformed data'}), 400
 
             name = data.get('name', 'NA')
