@@ -46,7 +46,7 @@ def _filter_stocks(stock_data, numSharesGt, numSharesLt):
     """Filter stocks based on query parameters."""
     return [
         stock for stock in stock_data
-        if '_id' in stock and 'shares' in stock and 'purchase_price' in stock and
+        if '_id' in stock and 'shares' in stock and 'purchase price' in stock and
            (numSharesGt is None or stock['shares'] > numSharesGt) and
            (numSharesLt is None or stock['shares'] < numSharesLt)
     ]
@@ -73,11 +73,11 @@ def _calculate_capital_gains(filtered_stocks):
     capital_gains = 0
     for stock in filtered_stocks:
         current_value = _fetch_current_value(stock)
-        stock_capital_gain = current_value - (stock['purchase_price'] * stock['shares'])
+        stock_capital_gain = current_value - (stock['purchase price'] * stock['shares'])
         logging.info(
             f"Capital gain for stock {stock['symbol']}: "
-            f"{current_value} - ({stock['purchase_price']} * {stock['shares']}) = {stock_capital_gain}. "
-            f"Current_value - (purchase_price * shares)"
+            f"{current_value} - ({stock['purchase price']} * {stock['shares']}) = {stock_capital_gain}. "
+            f"Current_value - (purchase price * shares)"
         )
         capital_gains += stock_capital_gain
     return capital_gains
