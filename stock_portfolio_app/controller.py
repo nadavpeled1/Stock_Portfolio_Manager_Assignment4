@@ -101,7 +101,7 @@ class StockController:
 
             # note: id is generated in the service layer
             stock = self.stock_service.add_stock(symbol, purchase_price, shares, name, purchase_date)
-            stock['_id'] = str(stock['_id'])  # Convert ObjectId to string
+            stock['id'] = str(stock.pop('_id'))  # Use 'id' for external response
             return jsonify(stock), 201
         except Exception as e:
             return jsonify({'server error': str(e)}), 500
@@ -122,7 +122,7 @@ class StockController:
 
             # Convert ObjectId to string for JSON serialization
             for stock in stocks:
-                stock['_id'] = str(stock['_id'])
+                stock['id'] = str(stock.pop('_id'))
 
             return jsonify(stocks), 200
 
@@ -133,7 +133,7 @@ class StockController:
     def get_stock(self, stock_id):
         try:
             stock = self.stock_service.get_stock_by_id(stock_id)
-            stock['_id'] = str(stock['_id'])
+            stock['id'] = str(stock.pop('_id'))
             return jsonify(stock), 200
         except KeyError:
             logging.error(f"DELETE request error: Stock with id '{stock_id}' not found.")
@@ -159,14 +159,13 @@ class StockController:
                 return jsonify({"error": "Expected application/json media type"}), 415
 
             data = request.get_json()
-            # TODO - change _id to id
-            required_fields = ['_id', 'symbol', 'name', 'purchase price', 'purchase date', 'shares']
+            required_fields = ['id', 'symbol', 'name', 'purchase price', 'purchase date', 'shares']
 
             if not self.validate_stock_data(data, required_fields, check_symbol_exists=False):
                 return jsonify({'error': 'Malformed data'}), 400
 
             # Ensure the ID in the payload matches the stock_id in the URL
-            if data['_id'] != stock_id:
+            if data['id'] != stock_id:
                 logging.error(
                     f"Validation failed: Stock ID in URL '{stock_id}' does not match ID in payload '{data['id']}'.")
                 return jsonify({"error": "ID mismatch"}), 400
@@ -184,7 +183,7 @@ class StockController:
             )
 
             # Prepare and return the response
-            response_data = {"_id": stock_id}
+            response_data = {"id": stock_id}
             return jsonify(response_data), 200
 
         except KeyError:
