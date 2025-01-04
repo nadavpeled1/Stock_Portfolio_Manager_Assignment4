@@ -56,6 +56,9 @@ class StockService:
                 {"_id": self.convert_to_object_id(stock_id)},
                 {"$set": updated_data}
             )
+            # Check if any document was modified
+            if result.modified_count == 0:
+                raise KeyError(f"Stock with id '{stock_id}' not found in the collection.")
             return result.modified_count
         except Exception as e:
             raise KeyError(f"Stock with id '{stock_id}' not found. Ensure the ID is correct: {e}.")
