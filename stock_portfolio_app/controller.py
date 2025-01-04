@@ -38,7 +38,7 @@ class StockController:
         if not self.validate_symbol(data['symbol']):
             return False
 
-        if not self.validate_purchase_price(data['purchase_price']):
+        if not self.validate_purchase_price(data['purchase price']):
             return False
 
         if not self.validate_number_of_shares(data['shares']):
@@ -51,10 +51,10 @@ class StockController:
     def validate_purchase_price(purchase_price):
         try:
             if float(purchase_price) <= 0:
-                logging.error("Validation failed: 'purchase_price' must be a positive number.")
+                logging.error("Validation failed: 'purchase price' must be a positive number.")
                 return False
         except (ValueError, TypeError):
-            logging.error("Validation failed: 'purchase_price' must be a valid number.")
+            logging.error("Validation failed: 'purchase price' must be a valid number.")
             return False
         return True
 
@@ -95,8 +95,8 @@ class StockController:
 
             name = data.get('name', 'NA')
             symbol = data['symbol']
-            purchase_price = data['purchase_price']
-            purchase_date = data.get('purchase_date', 'NA')
+            purchase_price = data['purchase price']
+            purchase_date = data.get('purchase date', 'NA')
             shares = data['shares']
 
             # note: id is generated in the service layer
@@ -159,7 +159,8 @@ class StockController:
                 return jsonify({"error": "Expected application/json media type"}), 415
 
             data = request.get_json()
-            required_fields = ['_id', 'symbol', 'name', 'purchase_price', 'purchase_date', 'shares']
+            # TODO - change _id to id
+            required_fields = ['_id', 'symbol', 'name', 'purchase price', 'purchase date', 'shares']
 
             if not self.validate_stock_data(data, required_fields, check_symbol_exists=False):
                 return jsonify({'error': 'Malformed data'}), 400
@@ -176,8 +177,8 @@ class StockController:
                 {
                     'symbol': data['symbol'],
                     'name': data['name'],
-                    'purchase_price': float(data['purchase_price']),
-                    'purchase_date': data['purchase_date'],
+                    'purchase_price': float(data['purchase price']),
+                    'purchase_date': data['purchase date'],
                     'shares': int(data['shares'])
                 }
             )

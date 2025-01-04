@@ -6,8 +6,8 @@ SINGLE_MOCK_STOCKS = [
         "_id": "1",
         "name": "Apple Inc.",
         "symbol": "AAPL",
-        "purchase_price": 150.0,
-        "purchase_date": "01-10-2023",
+        "purchase price": 150.0,
+        "purchase date": "01-10-2023",
         "shares": 10
     }]
 
@@ -16,16 +16,16 @@ DOUBLE_MOCK_STOCKS = [
         "_id": "1",
         "name": "Apple Inc.",
         "symbol": "AAPL",
-        "purchase_price": 150.0,
-        "purchase_date": "01-10-2023",
+        "purchase price": 150.0,
+        "purchase date": "01-10-2023",
         "shares": 10
     },
     {
         "_id": "2",
         "name": "Microsoft Corp.",
         "symbol": "MSFT",
-        "purchase_price": 300.0,
-        "purchase_date": "01-11-2023",
+        "purchase price": 300.0,
+        "purchase date": "01-11-2023",
         "shares": 20
     }
 ]
@@ -48,17 +48,17 @@ class TestController(unittest.TestCase):
                 "description": "Complete payload, expecting 201",
                 "payload": {
                     "symbol": "AAPL",
-                    "purchase_price": 150.0,
+                    "purchase price": 150.0,
                     "shares": 10,
                     "name": "Apple Inc.",
-                    "purchase_date": "01-10-2023"}
+                    "purchase date": "01-10-2023"}
             }
             ,
             {
                 "description": "Partial payload, expecting 201",
                 "payload": {
                     "symbol": "AAPL",
-                    "purchase_price": 150.0,
+                    "purchase price": 150.0,
                     "shares": 10}
             }
         ]
@@ -87,17 +87,17 @@ class TestController(unittest.TestCase):
             {
                 "description": "Missing required field 'symbol'",
                 "payload": {
-                    "purchase_price": 150.0,
+                    "purchase price": 150.0,
                     "shares": 10
                 },
                 "expected_status": 400,
                 "expected_error": "Malformed data",
             },
             {
-                "description": "Negative 'purchase_price'",
+                "description": "Negative 'purchase price'",
                 "payload": {
                     "symbol": "AAPL",
-                    "purchase_price": -150.0,
+                    "purchase price": -150.0,
                     "shares": 10
                 },
                 "expected_status": 400,
@@ -107,7 +107,7 @@ class TestController(unittest.TestCase):
                 "description": "Zero 'shares'",
                 "payload": {
                     "symbol": "AAPL",
-                    "purchase_price": 150.0,
+                    "purchase price": 150.0,
                     "shares": 0
                 },
                 "expected_status": 400,
@@ -145,16 +145,16 @@ class TestController(unittest.TestCase):
     #     payloads = [
     #         {
     #             "symbol": "AAPL",
-    #             "purchase_price": 150.0,
+    #             "purchase price": 150.0,
     #             "shares": 10,
     #             "name": "Apple Inc.",
-    #             "purchase_date": "01-10-2023"
+    #             "purchase date": "01-10-2023"
     #         },{
     #             "symbol": "AAPL",
-    #             "purchase_price": 160.0,
+    #             "purchase price": 160.0,
     #             "shares": 50,
     #             "name": "Apple Inc.",
-    #             "purchase_date": "01-10-2023"
+    #             "purchase date": "01-10-2023"
     #         }]
     #
     #     # Add the first stock
@@ -298,8 +298,8 @@ class TestController(unittest.TestCase):
     #         "id": "1",
     #         "symbol": "AAPL",
     #         "name": "Updated Apple Inc.",
-    #         "purchase_price": 200.0,
-    #         "purchase_date": "01-12-2023",
+    #         "purchase price": 200.0,
+    #         "purchase date": "01-12-2023",
     #         "shares": 20
     #     }
     #
@@ -317,7 +317,7 @@ class TestController(unittest.TestCase):
     #     # Verify the stock is updated in the portfolio
     #     updated_stock = self.controller_service.stock_service.portfolio["1"]
     #     self.assertEqual(updated_stock.name, "Updated Apple Inc.")
-    #     self.assertEqual(updated_stock.purchase_price, 200.0)
+    #     self.assertEqual(updated_stock.purchase price, 200.0)
     #     self.assertEqual(updated_stock.shares, 20)
     #
     # def test_update_stock_bad_cases(self):
@@ -330,8 +330,8 @@ class TestController(unittest.TestCase):
     #                 "id": "1",
     #                 "symbol": "AAPL",
     #                 "name": "Updated Apple Inc.",
-    #                 "purchase_price": 200.0,
-    #                 "purchase_date": "01-12-2023",
+    #                 "purchase price": 200.0,
+    #                 "purchase date": "01-12-2023",
     #                 "shares": 20
     #             },
     #             "content_type": "text/plain",
@@ -344,7 +344,7 @@ class TestController(unittest.TestCase):
     #             "payload": {
     #                 "id": "1",
     #                 "symbol": "AAPL",
-    #                 # Missing 'name', 'purchase_price', 'purchase_date', 'shares'
+    #                 # Missing 'name', 'purchase price', 'purchase date', 'shares'
     #             },
     #             "content_type": "application/json",
     #             "expected_status": 400,
@@ -357,8 +357,8 @@ class TestController(unittest.TestCase):
     #                 "id": "1",
     #                 "symbol": "AAPL",
     #                 "name": "Updated Apple Inc.",
-    #                 "purchase_price": 200.0,
-    #                 "purchase_date": "01-12-2023",
+    #                 "purchase price": 200.0,
+    #                 "purchase date": "01-12-2023",
     #                 "shares": 20
     #             },
     #             "content_type": "application/json",
@@ -372,8 +372,8 @@ class TestController(unittest.TestCase):
     #                 "id": "1",
     #                 "symbol": "AAPL",
     #                 "name": "Updated Apple Inc.",
-    #                 "purchase_price": -200.0,  # Invalid negative price
-    #                 "purchase_date": "01-12-2023",
+    #                 "purchase price": -200.0,  # Invalid negative price
+    #                 "purchase date": "01-12-2023",
     #                 "shares": 20
     #             },
     #             "content_type": "application/json",
@@ -387,8 +387,8 @@ class TestController(unittest.TestCase):
     #                 "id": "1",
     #                 "symbol": "AAPL",
     #                 "name": "Updated Apple Inc.",
-    #                 "purchase_price": 200.0,
-    #                 "purchase_date": "01-12-2023",
+    #                 "purchase price": 200.0,
+    #                 "purchase date": "01-12-2023",
     #                 "shares": -10  # Invalid negative shares
     #             },
     #             "content_type": "application/json",

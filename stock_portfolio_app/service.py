@@ -19,8 +19,8 @@ class StockService:
         new_stock = {
             "name": name,
             "symbol": symbol,
-            "purchase_price": round(purchase_price, 2),
-            "purchase_date": purchase_date,
+            "purchase price": round(purchase_price, 2),
+            "purchase date": purchase_date,
             "shares": shares
         }
         result = self.stocks_collection.insert_one(new_stock)
