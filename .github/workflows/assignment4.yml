@@ -55,7 +55,7 @@ jobs:
     steps:
       # Step to check out the repository code
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Step to set up and run Docker Compose
       - name: Set up Docker Compose
