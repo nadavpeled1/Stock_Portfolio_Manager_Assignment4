@@ -12,40 +12,33 @@ jobs:
     steps:
       # Step to check out the repository code
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Step to set up Docker Buildx for building multi-platform images
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v2 #latest stable version
 
       # Step to log in to Docker Hub using credentials stored in GitHub Secrets
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
+          username: ${{ secrets.DOCKER_USERNAME }} #these are defined in the repository secrets settings
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Step to build the Docker image for the stock service
-      - name: Build stock service image
-        run: |
-          docker build -t stock_service:latest ./stock_portfolio_app
+      # Step to build and push the stock service image to Docker Hub
+      - name: Build and push stock service image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./stock_portfolio_app
+          tags: ${{ secrets.DOCKER_USERNAME }}/stock_service:latest
+          push: true
 
-      # Step to build the Docker image for the capital gain service
-      - name: Build capital gain service image
-        run: |
-          docker build -t capgain_service:latest ./capital_gain_service
-
-      # Step to tag and push the stock service image to Docker Hub
-      - name: Push stock service image
-        run: |
-          docker tag stock_service:latest ${{ secrets.DOCKER_USERNAME }}/stock_service:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/stock_service:latest
-
-      # Step to tag and push the capital gain service image to Docker Hub
-      - name: Push capital gain service image
-        run: |
-          docker tag capgain_service:latest ${{ secrets.DOCKER_USERNAME }}/capgain_service:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/capgain_service:latest
+      - name: Build and push capital gain service image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./capital_gain_service
+          tags: ${{ secrets.DOCKER_USERNAME }}/capgain_service:latest
+          push: true
 
   test:
     # The test job runs on the latest version of Ubuntu and depends on the build job
