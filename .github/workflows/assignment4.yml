@@ -40,6 +40,29 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/capgain_service:latest
           push: true
 
+      - name: Create log file
+        run: |
+          echo "$(date -Iminutes)" > log.txt
+          echo "Submitter Name" >> log.txt
+          if [ ${{ steps.build_stock_service.outcome }} == 'success' ]; then
+            echo "stock service image successfully built" >> log.txt
+          else
+            echo "stock service image not able to be built" >> log.txt
+          fi
+          
+          if [ ${{ steps.build_capgain_service.outcome }} == 'success' ]; then
+            echo "capital gain service image successfully built" >> log.txt
+          else
+            echo "capital gain service image not able to be built" >> log.txt
+          fi
+        shell: bash
+
+      - name: Upload log file
+        uses: actions/upload-artifact@v4
+        with:
+          name: log
+          path: log.txt
+
   test:
     # The test job runs on the latest version of Ubuntu and depends on the build job
     runs-on: ubuntu-latest
